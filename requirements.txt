@@ -1,0 +1,6 @@
+ultralytics          # Framework YOLO para detecção
+opencv-python        # Processamento de imagem
+fastapi              # Backend de alta performance
+uvicorn              # Servidor para a API
+pandas               # Manipulação de dados/relatórios
+sqlalchemy           # ORM para o Banco de Dados
