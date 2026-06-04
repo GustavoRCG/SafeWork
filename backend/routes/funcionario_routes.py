@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from ..database.database import get_db, get_current_user # 🔐 Importando o protetor do Firebase
-from ..repositories.funcionario_repository import FuncionarioRepository
-from ..controllers.funcionario_controller import FuncionarioController
-from ..schemas.funcionario_schema import FuncionarioCreate, FuncionarioResponse
+from database.database import get_db, get_current_user # 🔐 Importando o protetor do Firebase
+from repositories.funcionario_repository import FuncionarioRepository
+from controllers.funcionario_controller import FuncionarioController
+from schemas.funcionario_schema import FuncionarioCreate, FuncionarioResponse
 
 router = APIRouter(prefix="/funcionarios", tags=["Funcionários"])
 

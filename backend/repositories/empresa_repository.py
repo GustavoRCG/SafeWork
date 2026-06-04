@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..database import models
-from ..schemas.empresa_schema import EmpresaCreate
+from database import models
+from schemas.empresa_schema import EmpresaCreate
 
 class EmpresaRepository:
     def __init__(self, db: Session):

@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from ..database.database import get_db, get_current_user
-from ..repositories.plano_repository import PlanoRepository
-from ..controllers.plano_controller import PlanoController
-from ..schemas.plano_schema import PlanoCreate, PlanoResponse
+from database.database import get_db, get_current_user
+from repositories.plano_repository import PlanoRepository
+from controllers.plano_controller import PlanoController
+from schemas.plano_schema import PlanoCreate, PlanoResponse
 
 router = APIRouter(prefix="/planos", tags=["Planos"])
 

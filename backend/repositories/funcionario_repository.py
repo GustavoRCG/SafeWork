@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..database import models
-from ..schemas.funcionario_schema import FuncionarioCreate
+from database import models
+from schemas.funcionario_schema import FuncionarioCreate
 
 class FuncionarioRepository:
     def __init__(self, db: Session):

@@ -4,11 +4,11 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 # 🔐 Importamos o database e também o get_current_user para a segurança real
-from ..database import database
-from ..database.database import get_current_user 
+from database import database
+from database.database import get_current_user 
 
-from ..repositories.user_repository import UserRepository
-from ..controllers.auth_controller import AuthController
+from repositories.user_repository import UserRepository
+from controllers.auth_controller import AuthController
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 

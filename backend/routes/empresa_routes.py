@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from ..database.database import get_db, get_current_user
-from ..repositories.empresa_repository import EmpresaRepository
-from ..controllers.empresa_controller import EmpresaController
-from ..schemas.empresa_schema import EmpresaCreate, EmpresaResponse
+from database.database import get_db, get_current_user
+from repositories.empresa_repository import EmpresaRepository
+from controllers.empresa_controller import EmpresaController
+from schemas.empresa_schema import EmpresaCreate, EmpresaResponse
 
 router = APIRouter(prefix="/empresas", tags=["Empresas"])
 

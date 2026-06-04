@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..database import models
-from ..schemas.plano_schema import PlanoCreate
+from database import models
+from schemas.plano_schema import PlanoCreate
 
 class PlanoRepository:
     def __init__(self, db: Session):

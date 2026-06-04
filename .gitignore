@@ -1,0 +1,8 @@
+# Ignorar chaves e credenciais
+safework-bc1aa-firebase-adminsdk-fbsvc-89135f3f6d.json
+*.json.local
+
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.pyc
+.env
