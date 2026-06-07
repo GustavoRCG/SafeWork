@@ -1,0 +1,321 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #0b0f19;
+  /* Iluminação radial sutil no fundo da tela para quebrar o preto puro */
+  background-image: radial-gradient(
+    circle at 50% 15%,
+    rgba(30, 41, 59, 0.5) 0%,
+    transparent 50%
+  );
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2; /* Garante que fica acima das luzes de fundo */
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 48px;
+  position: relative;
+}
+
+/* 🌟 Iluminação atrás da LOGO (Glow Effect) */
+.logo-box {
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 12px 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  /* Sombra brilhante azulada simulando a luz de fundo */
+  box-shadow:
+    0 0 40px 5px rgba(56, 189, 248, 0.15),
+    inset 0 0 12px rgba(56, 189, 248, 0.1);
+}
+
+.logo-text-top {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+.logo-text-bottom {
+  color: #38bdf8;
+  font-size: 9px;
+  letter-spacing: 3px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.login-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.login-subtitle {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.profiles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.profile-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 44px 24px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 🌟 Iluminação Dinâmica ao passar o mouse (Hover) nos Cards */
+.profile-card:hover {
+  transform: translateY(-6px);
+  background-color: #131c35;
+}
+
+/* Customização do brilho por tipo de card ao passar o mouse */
+.profile-card:nth-child(1):hover {
+  border-color: #2563eb;
+  box-shadow:
+    0 10px 30px -10px rgba(37, 99, 235, 0.3),
+    0 0 15px 1px rgba(37, 99, 235, 0.1);
+}
+
+.profile-card:nth-child(2):hover {
+  border-color: #059669;
+  box-shadow:
+    0 10px 30px -10px rgba(5, 150, 105, 0.3),
+    0 0 15px 1px rgba(5, 150, 105, 0.1);
+}
+
+.profile-card:nth-child(3):hover {
+  border-color: #9333ea;
+  box-shadow:
+    0 10px 30px -10px rgba(147, 51, 234, 0.3),
+    0 0 15px 1px rgba(147, 51, 234, 0.1);
+}
+
+/* Círculos dos Ícones */
+.profile-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  transition: transform 0.3s ease;
+}
+
+.profile-card:hover .profile-icon-bg {
+  transform: scale(1.05);
+}
+
+.profile-icon-bg.blue {
+  background-color: #1d4ed8;
+  box-shadow: 0 0 20px rgba(29, 78, 216, 0.4);
+}
+.profile-icon-bg.green {
+  background-color: #047857;
+  box-shadow: 0 0 20px rgba(4, 120, 87, 0.4);
+}
+.profile-icon-bg.purple {
+  background-color: #7e22ce;
+  box-shadow: 0 0 20px rgba(126, 34, 206, 0.4);
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.profile-desc {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Formulário de Login */
+.login-form-wrapper {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  padding: 40px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.back-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.badge-perfil {
+  font-size: 12px;
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.1);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.btn-trocar {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.senha-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-esqueci {
+  font-size: 13px;
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #64748b;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 14px 14px 46px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  font-size: 15px;
+  outline: none;
+  background-color: #0b0f19;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.eye-button {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.btn-submit {
+  background-color: #1d4ed8;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+  background-color: #1e40af;
+}
+
+.login-footer-text {
+  text-align: center;
+  font-size: 13px;
+  color: #475569;
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 768px) {
+  .profiles-grid {
+    grid-template-columns: 1fr;
+  }
+}
