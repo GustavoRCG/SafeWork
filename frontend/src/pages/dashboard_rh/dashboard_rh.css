@@ -1,3 +1,6 @@
+/* ==========================================================================
+   1. ESTRUTURA GLOBAL & CONTAINERS
+   ========================================================================== */
 .dash-rh-container {
   min-height: 100vh;
   background-color: #0b0f19;
@@ -5,6 +8,9 @@
   font-family:
     system-ui,
     -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
     sans-serif;
 }
 
@@ -23,6 +29,7 @@
   gap: 10px;
   font-size: 20px;
   font-weight: 700;
+  color: #f8fafc;
 }
 
 .badge-rh {
@@ -35,9 +42,19 @@
   font-weight: 600;
 }
 
-.btn-logout-rh {
-  background: none;
-  border: 1px solid #1e293b;
+.rh-content {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   2. BOTÕES DE NAVEGAÇÃO & TOPO
+   ========================================================================== */
+.btn-logout-rh,
+.btn-back-rh {
+  background-color: #1e293b;
+  border: 1px solid #334155;
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -45,21 +62,25 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #94a3b8;
-  transition: all 0.2s;
+  color: #cbd5e1;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
 }
 
 .btn-logout-rh:hover {
-  background-color: #1e293b;
+  background-color: #ef4444;
+  border-color: #ef4444;
   color: #ffffff;
 }
 
-.rh-content {
-  padding: 32px;
-  max-width: 1400px;
-  margin: 0 auto;
+.btn-back-rh:hover {
+  background-color: #334155;
+  color: #ffffff;
 }
 
+/* ==========================================================================
+   3. GRID DE MÉTRICAS (DASHBOARD)
+   ========================================================================== */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -75,6 +96,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .metric-info {
@@ -85,12 +107,13 @@
 
 .metric-label {
   font-size: 14px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .metric-value {
   font-size: 28px;
   font-weight: 700;
+  color: #f8fafc;
 }
 
 .text-danger {
@@ -100,11 +123,15 @@
   color: #10b981;
 }
 
+/* ==========================================================================
+   4. TABELA DE AUDITORIA & REGISTROS
+   ========================================================================== */
 .table-card {
   background-color: #0f172a;
   border: 1px solid #1e293b;
   border-radius: 12px;
   padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .table-header {
@@ -120,10 +147,14 @@
   color: #f8fafc;
 }
 
-.btn-export {
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  color: #cbd5e1;
+.table-actions-group {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-action-primary,
+.btn-action-secondary {
+  border: 1px solid transparent;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -131,11 +162,36 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
-.btn-export:hover {
+.btn-action-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-action-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-action-secondary {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.btn-action-secondary:hover {
   background-color: #334155;
   color: #ffffff;
+}
+
+.loading-table-text,
+.empty-table-text {
+  padding: 24px;
+  text-align: center;
+  color: #64748b;
+  margin: 0;
 }
 
 .rh-table {
@@ -149,15 +205,20 @@
 .rh-table td {
   padding: 16px;
   border-bottom: 1px solid #1e293b;
+  color: #cbd5e1;
 }
 
 .rh-table th {
   color: #64748b;
   font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
 }
 
 .font-bold {
   font-weight: 600;
+  color: #f8fafc;
 }
 
 .rh-badge-infrax {
@@ -166,6 +227,8 @@
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .status-pill {
@@ -173,6 +236,7 @@
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 9999px;
+  display: inline-block;
 }
 
 .status-pill.notificado {
@@ -186,4 +250,241 @@
 .status-pill.resolvido {
   background-color: rgba(16, 185, 129, 0.15);
   color: #34d399;
+}
+
+/* ==========================================================================
+   5. TELA DE CADASTRO (GRID DE ADMISSÃO)
+   ========================================================================== */
+.rh-cadastro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.cadastro-form-card,
+.cadastro-camera-card {
+  padding: 32px;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.form-section-header,
+.camera-section-header {
+  margin-bottom: 24px;
+}
+
+.form-section-header h2,
+.camera-section-header h2 {
+  fontsize: 20px;
+  margin: 0 0 6px 0;
+  color: #f8fafc;
+}
+
+.form-section-header p,
+.camera-section-header p {
+  font-size: 14px;
+  margin: 0;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   6. FORMULÁRIO DE INPUTS
+   ========================================================================== */
+.form-cadastro-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-field-rh,
+.select-field-rh {
+  padding: 12px 14px;
+  background-color: #0b0f19;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #ffffff;
+  transition: all 0.2s;
+}
+
+.input-field-rh::placeholder {
+  color: #475569;
+}
+
+.input-field-rh:focus,
+.select-field-rh:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  background-color: #0f172a;
+}
+
+.select-field-rh option {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+.btn-submit-cadastro {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 15px;
+  transition: background-color 0.2s;
+}
+
+.btn-submit-cadastro:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-submit-cadastro:disabled {
+  background-color: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   7. VIEWPORT DA WEB_CAM & PREVIEW BIOMÉTRICO
+   ========================================================================== */
+.camera-viewport-display {
+  background-color: #020617;
+  width: 100%;
+  height: 330px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.live-video-stream {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Corrige efeito espelho */
+  display: block;
+}
+
+.preview-image-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.captured-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.success-badge-coleta {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: #10b981;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.camera-placeholder-box {
+  text-align: center;
+  color: #475569;
+}
+
+.camera-placeholder-icon {
+  margin-bottom: 8px;
+}
+
+.camera-placeholder-box p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.camera-actions-wrapper {
+  margin-top: 20px;
+}
+
+.btn-trigger-capture {
+  width: 100%;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-trigger-capture:hover {
+  background-color: #dc2626;
+}
+
+.btn-toggle-camera {
+  width: 100%;
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-toggle-camera:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   8. RESPONSIVIDADE (MEDIA QUERIES)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .rh-cadastro-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin: 20px auto;
+  }
 }

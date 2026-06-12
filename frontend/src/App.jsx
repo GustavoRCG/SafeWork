@@ -7,6 +7,7 @@ import Login from "./pages/login/login";
 import DashboardSeguranca from "./pages/dashboard_seguranca/dashboard_seguranca";
 import DashboardRH from "./pages/dashboard_rh/dashboard_rh";
 import DashboardAdmin from "./pages/dashboard_admin/dashboard_admin"; // Novo Import
+import CadastroFuncionario from "./pages/dashboard_rh/cadastro_funcionario"; // Nova Tela de Cadastro de Funcionário
 
 function App() {
   const [usuarioLogado, setUsuarioLogado] = useState(null);

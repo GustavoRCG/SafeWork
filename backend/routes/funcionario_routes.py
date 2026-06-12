@@ -13,17 +13,16 @@ router = APIRouter(prefix="/funcionarios", tags=["Funcionários"])
 def cadastrar_funcionario(
     funcionario_in: FuncionarioCreate, 
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user) # 🔐 Rota protegida!
+    current_user: dict = Depends(get_current_user)
 ):
     """
-    Rota protegida para cadastrar um novo funcionário. 
-    Requer Token JWT do Firebase no Header (Authorization: Bearer <TOKEN>).
+    Rota protegida para cadastrar um novo funcionário.
     """
-    # Se precisar do UID do usuário logado para alguma regra, ele está aqui:
-    # uid_firebase = current_user.get("uid")
+    # 💡 Como o seu Controller usa psycopg2 nativo, precisamos pegar a conexão bruta do SQLAlchemy:
+    conexao_psycopg2 = db.connection().connection
     
-    repo = FuncionarioRepository(db)
-    controller = FuncionarioController(repo)
+    # 🟢 Injetamos a conexão nativa que o seu Controller espera
+    controller = FuncionarioController(conexao_psycopg2)
     
     try:
         return controller.cadastrar(funcionario_in)
@@ -37,11 +36,13 @@ def cadastrar_funcionario(
 def listar_funcionarios_por_empresa(
     id_empresa: int, 
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user) # 🔐 Rota protegida!
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Rota protegida para listar funcionários de uma empresa.
     """
-    repo = FuncionarioRepository(db)
-    controller = FuncionarioController(repo)
+    # 💡 Fazemos a mesma coisa aqui para a rota de listagem
+    conexao_psycopg2 = db.connection().connection
+    controller = FuncionarioController(conexao_psycopg2)
+    
     return controller.listar_por_empresa(id_empresa)
