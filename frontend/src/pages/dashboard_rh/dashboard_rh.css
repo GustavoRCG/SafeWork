@@ -1,0 +1,189 @@
+.dash-rh-container {
+  min-height: 100vh;
+  background-color: #0b0f19;
+  color: #ffffff;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.rh-header {
+  background-color: #0f172a;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e293b;
+}
+
+.rh-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.badge-rh {
+  font-size: 11px;
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.btn-logout-rh {
+  background: none;
+  border: 1px solid #1e293b;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.btn-logout-rh:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.rh-content {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.text-danger {
+  color: #ef4444;
+}
+.text-success {
+  color: #10b981;
+}
+
+.table-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.table-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #f8fafc;
+}
+
+.btn-export {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.btn-export:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+.rh-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.rh-table th,
+.rh-table td {
+  padding: 16px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.rh-table th {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.rh-badge-infrax {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.status-pill.notificado {
+  background-color: rgba(234, 88, 12, 0.15);
+  color: #fb923c;
+}
+.status-pill.pendente {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+.status-pill.resolvido {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}

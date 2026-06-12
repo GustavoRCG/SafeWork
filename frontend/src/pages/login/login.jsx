@@ -30,7 +30,9 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, senha);
-      navigate("/dashboard-seguranca");
+      // Guarda o perfil selecionado para sabermos para onde redirecionar no App.jsx
+      localStorage.setItem("user_profile", perfil);
+      navigate(`/dashboard-${perfil}`);
     } catch (error) {
       if (
         error.code === "auth/invalid-credential" ||

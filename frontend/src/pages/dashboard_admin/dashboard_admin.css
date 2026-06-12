@@ -1,0 +1,175 @@
+.dash-admin-container {
+  min-height: 100vh;
+  background-color: #0b0f19;
+  color: #ffffff;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.admin-header {
+  background-color: #0f172a;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e293b;
+}
+
+.admin-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.badge-admin {
+  font-size: 11px;
+  background-color: #a855f7;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.btn-logout-admin {
+  background: none;
+  border: 1px solid #1e293b;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.btn-logout-admin:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.admin-content {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.admin-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-title-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title-zone h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #f8fafc;
+}
+
+.user-list,
+.camera-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-item,
+.camera-item {
+  background-color: #0b0f19;
+  border: 1px solid #1e293b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-name,
+.camera-local {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.user-email,
+.camera-ip {
+  font-size: 12px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.user-role {
+  color: #a855f7;
+  font-weight: 500;
+}
+
+.status-online,
+.cam-status {
+  font-size: 12px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.btn-admin-action {
+  background-color: #a855f7;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-admin-action:hover {
+  opacity: 0.9;
+}
+
+.wide-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logs-console {
+  background-color: #05070f;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #a7f3d0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.logs-console p {
+  margin: 6px 0;
+}
