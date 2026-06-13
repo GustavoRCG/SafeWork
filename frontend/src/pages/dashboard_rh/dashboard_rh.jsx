@@ -211,7 +211,6 @@ function DashboardRH() {
 
   return (
     <div className="dash-rh-container">
-      {/* BARRA SUPERIOR (HEADER) */}
       <header className="rh-header">
         <div className="rh-logo">
           <Users size={28} color="#2563eb" />
@@ -237,7 +236,6 @@ function DashboardRH() {
         )}
       </header>
 
-      {/* RENDERIZAÇÃO CONDICIONAL DE TELAS */}
       {visaoAtual === "dashboard" ? (
         <main className="rh-content">
           {/* Cards de Métricas */}

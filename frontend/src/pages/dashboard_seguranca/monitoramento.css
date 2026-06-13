@@ -1,0 +1,296 @@
+.monitoramento-live-container {
+  padding: 24px;
+}
+
+/* Grid superior de métricas */
+.live-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-glass-card {
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.metric-icon-side {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.green-circle {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.blue-circle {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.red-circle {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.yellow-circle {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.metric-lbl {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+.metric-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.red-txt {
+  color: #ef4444;
+}
+
+/* Workspace Split */
+.live-workspace-split {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+
+/* Player/Canvas de Vídeo */
+.video-stream-wrapper {
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+.video-overlay-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.badge-cam-id {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+}
+
+.badge-yolo-detect {
+  background-color: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.mock-video-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.canvas-img-source {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* CSS Bounding Boxes do YOLOv8 */
+.bounding-box-yolo {
+  position: absolute;
+  border-width: 2px;
+  border-style: solid;
+}
+.critical-box {
+  border-color: #ef4444;
+}
+.warning-box {
+  border-color: #f59e0b;
+  border-style: dashed;
+}
+
+.box-label {
+  position: absolute;
+  top: -22px;
+  left: -2px;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.critical-box .box-label {
+  background-color: #ef4444;
+}
+.warning-box .box-label {
+  background-color: #f59e0b;
+}
+
+/* Painel de Eventos */
+.events-feed-panel {
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-title {
+  font-size: 16px;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.feed-scroll-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 480px;
+}
+
+.feed-item-card {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.feed-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.badge-severity {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.badge-severity.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+.badge-severity.warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+.badge-severity.success {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.feed-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.feed-event-name {
+  font-size: 14px;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.feed-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.feed-location {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.btn-ver-frame {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.canvas-placeholder-bg {
+  background-color: #020617;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 460px;
+}
+.waiting-ia-connect {
+  text-align: center;
+  padding: 32px;
+}
+.waiting-ia-connect h3 {
+  color: #94a3b8;
+  font-size: 16px;
+  margin: 16px 0 6px 0;
+}
+.waiting-ia-connect p {
+  color: #475569;
+  font-size: 13px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.live-indicator.offline {
+  background-color: #64748b;
+}
+.badge-yolo-detect.standby {
+  background-color: rgba(100, 116, 139, 0.1);
+  border-color: #64748b;
+  color: #94a3b8;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
