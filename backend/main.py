@@ -4,9 +4,7 @@ from firebase_admin import credentials
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-
-# 1. CORRIGIDO: Agora importamos os ficheiros da pasta 'routes' e não mais de controllers
-from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes
+from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes
 from database import database
 from database import models  # Vai carregar o database/models/__init__.py de forma automática
 
@@ -49,11 +47,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 6. 🔄 CORRIGIDO: Inclusão das Rotas lendo do pacote routes correto
 app.include_router(auth_routes.router)
 app.include_router(funcionario_routes.router) 
 app.include_router(empresa_routes.router)
 app.include_router(plano_routes.router)
+app.include_router(seguranca_routes.router)
 
 # 7. Rota de Boas-vindas (Health Check)
 @app.get("/", tags=["Root"])

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebaseConfig";
 import {
@@ -14,7 +14,6 @@ import "./cadastro_funcionario.css";
 
 function CadastroFuncionario() {
   const navigate = useNavigate();
-  const videoRef = useRef(null);
 
   // Estados dos inputs do formulário
   const [nome, setNome] = useState("");
@@ -23,54 +22,44 @@ function CadastroFuncionario() {
   const [setor, setSetor] = useState("");
   const [epiObrigatorio, setEpiObrigatorio] = useState("Capacete, Colete");
 
-  // Estados do Face ID (Câmera)
+  // Estados do Face ID (Webcam centralizada no Backend)
   const [cameraAtiva, setCameraAtiva] = useState(false);
-  const [fotoCapturada, setFotoCapturada] = useState(null); // Guarda a imagem em String Base64
+  const [fotoCapturada, setFotoCapturada] = useState(null); // Guarda a imagem em String Base64 vinda do Python
   const [carregando, setCarregando] = useState(false);
 
-  // 📷 Inicializar a Câmera do Computador
-  const ligarCamera = async () => {
+  // 📷 Inicializa a visualização do fluxo que o Python está capturando
+  const ligarCamera = () => {
     setFotoCapturada(null);
+    setCameraAtiva(true);
+  };
+
+  // ✂️ Solicita ao Backend que capture o frame atual da câmera dele
+  const capturarFotoPeloBackend = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 440, height: 330 },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraAtiva(true);
+      setCarregando(true);
+
+      // Rota no seu FastAPI que lê o frame atual do cv2.VideoCapture e retorna em Base64
+      const response = await api.get("/api/monitoramento/capturar-frame");
+
+      if (response.data && response.data.imagem_base64) {
+        setFotoCapturada(response.data.imagem_base64);
+        setCameraAtiva(false);
+      } else {
+        alert("O servidor não retornou um frame válido.");
       }
     } catch (err) {
-      console.error("Erro ao acessar a webcam: ", err);
+      console.error("Erro ao solicitar captura de frame ao backend: ", err);
       alert(
-        "Não foi possível acessar a câmera. Certifique-se de dar permissão no navegador.",
+        "Não foi possível capturar a imagem do servidor de IA. Verifique se o backend está rodando.",
       );
+    } finally {
+      setCarregando(false);
     }
   };
 
-  // ✂️ Capturar o Frame (Bater a Foto)
-  const capturarFoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement("canvas");
-      canvas.width = 440;
-      canvas.height = 330;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-      const imagemBase64 = canvas.toDataURL("image/jpeg");
-      setFotoCapturada(imagemBase64);
-
-      // Desliga a câmera para poupar processamento
-      desligarStreamCamera();
-    }
-  };
-
-  // Fechar o canal da câmera
-  const desligarStreamCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
-    }
-    setCameraAtiva(false);
+  const resetarCaptura = () => {
+    setFotoCapturada(null);
+    setCameraAtiva(true);
   };
 
   // 🟢 Enviar Payload Completo ao FastAPI
@@ -93,23 +82,18 @@ function CadastroFuncionario() {
       }
 
       const token = await usuarioAtual.getIdToken();
-
-      // 🧼 Limpeza preventiva: Remove pontos, traços ou espaços do CPF enviados pelo formulário
       const cpfLimpo = cpf.replace(/\D/g, "");
-
-      // 📅 Captura a data atual no padrão exigido pelo Pydantic/SQLAlchemy (AAAA-MM-DD)
       const dataHoje = new Date().toISOString().split("T")[0];
 
-      // Payload mapeado e sincronizado com os campos tolerados pelo Schema do backend
       const novoColaborador = {
-        id_empresa: 1, // ID de escopo do contexto corporativo fixo
+        id_empresa: 1,
         nome: nome.trim(),
         cpf: cpfLimpo,
         cargo: cargo.trim(),
         data_admissao: dataHoje,
         setor: setor.trim(),
         epi_obrigatorio: epiObrigatorio,
-        face_id_image: fotoCapturada, // String Base64 enviada dinamicamente
+        face_id_image: fotoCapturada, // String Base64 capturada pelo backend enviada de volta
       };
 
       await api.post("/funcionarios/", novoColaborador, {
@@ -121,7 +105,6 @@ function CadastroFuncionario() {
     } catch (erro) {
       console.error("Erro detalhado ao enviar dados para a API:", erro);
 
-      // 🔍 Intercepta erros estruturais (ex: Erro 400 do Pydantic) e exibe os campos com problema
       if (erro.response && erro.response.data && erro.response.data.detail) {
         const detalheDoErro = erro.response.data.detail;
 
@@ -146,10 +129,7 @@ function CadastroFuncionario() {
       {/* Barra Superior */}
       <header className="cadastro-header">
         <button
-          onClick={() => {
-            desligarStreamCamera();
-            navigate("/dashboard-rh");
-          }}
+          onClick={() => navigate("/dashboard-rh")}
           className="btn-back-rh"
         >
           <ArrowLeft size={18} /> Voltar ao Painel
@@ -251,7 +231,7 @@ function CadastroFuncionario() {
           </form>
         </div>
 
-        {/* Lado Direito: Captura de Face ID */}
+        {/* Lado Direito: Captura de Face ID via Feed do Backend */}
         <div className="cadastro-camera-card">
           <div className="card-intro">
             <h2>Biometria Facial (Face ID)</h2>
@@ -270,17 +250,17 @@ function CadastroFuncionario() {
                 </div>
               </div>
             ) : cameraAtiva ? (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
+              /* O React apenas consome a rota de streaming de vídeo do seu FastAPI */
+              <img
+                src="http://localhost:8000/api/video-stream"
+                alt="Transmissão de Vídeo da IA"
                 className="live-webcam-element"
+                style={{ width: "440px", height: "330px", objectFit: "cover" }}
               />
             ) : (
               <div className="camera-idle-placeholder">
                 <Camera size={48} color="#94a3b8" />
-                <p>Câmera desativada</p>
+                <p>Fluxo de vídeo inativo</p>
               </div>
             )}
           </div>
@@ -289,15 +269,17 @@ function CadastroFuncionario() {
             {cameraAtiva ? (
               <button
                 type="button"
-                onClick={capturarFoto}
+                onClick={capturarFotoPeloBackend}
+                disabled={carregando}
                 className="btn-trigger-snap"
               >
-                <Camera size={18} /> Capturar Face ID
+                <Camera size={18} />{" "}
+                {carregando ? "Capturando..." : "Capturar Face ID"}
               </button>
             ) : (
               <button
                 type="button"
-                onClick={ligarCamera}
+                onClick={fotoCapturada ? resetarCaptura : ligarCamera}
                 className="btn-trigger-power"
               >
                 {fotoCapturada ? (

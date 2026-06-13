@@ -18,10 +18,8 @@ def cadastrar_funcionario(
     """
     Rota protegida para cadastrar um novo funcionário.
     """
-    # 💡 Como o seu Controller usa psycopg2 nativo, precisamos pegar a conexão bruta do SQLAlchemy:
     conexao_psycopg2 = db.connection().connection
     
-    # 🟢 Injetamos a conexão nativa que o seu Controller espera
     controller = FuncionarioController(conexao_psycopg2)
     
     try:

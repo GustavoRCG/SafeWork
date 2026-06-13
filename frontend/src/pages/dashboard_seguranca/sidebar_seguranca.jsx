@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { auth } from "../../firebaseConfig"; // Ajuste o caminho conforme sua estrutura
+import { auth } from "../../firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,9 +9,9 @@ import {
   Camera,
   Sliders,
   LogOut,
-  ShieldAlert,
   User,
 } from "lucide-react";
+import logoSafeWork from "../../assets/logoSafeWork.jpeg";
 import "./sidebar_seguranca.css";
 
 function SidebarSeguranca({ telaAtiva, setTelaAtiva }) {
@@ -77,11 +77,25 @@ function SidebarSeguranca({ telaAtiva, setTelaAtiva }) {
 
   return (
     <aside className="safework-sidebar">
-      <div className="sidebar-brand">
-        <ShieldAlert size={28} color="#ef4444" />
-        <h2>
-          Safe<span className="brand-highlight">Work</span>
-        </h2>
+      {/* 🖼️ Bloco da Brand Atualizado com a Logo Oficial em Imagem */}
+      <div
+        className="sidebar-brand"
+        style={{
+          padding: "15px 10px",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <img
+          src={logoSafeWork}
+          alt="SafeWork Visão Computacional"
+          style={{
+            width: "100%",
+            maxHeight: "75px",
+            objectFit: "contain",
+            borderRadius: "4px",
+          }}
+        />
       </div>
 
       <div className="model-status-badge">
