@@ -85,15 +85,16 @@ function CadastroFuncionario() {
       const cpfLimpo = cpf.replace(/\D/g, "");
       const dataHoje = new Date().toISOString().split("T")[0];
 
+      // CORREÇÃO TÉCNICA AQUI:
+      // O payload agora contém APENAS os campos exatos mapeados no banco da Emilly!
+      // (setor e epi_obrigatorio foram removidos do envio para não quebrar a aplicação)
       const novoColaborador = {
         id_empresa: 1,
         nome: nome.trim(),
         cpf: cpfLimpo,
         cargo: cargo.trim(),
         data_admissao: dataHoje,
-        setor: setor.trim(),
-        epi_obrigatorio: epiObrigatorio,
-        face_id_image: fotoCapturada, // String Base64 capturada pelo backend enviada de volta
+        face_id_image: fotoCapturada, // String Base64 enviada para tratamento no backend
       };
 
       await api.post("/funcionarios/", novoColaborador, {
