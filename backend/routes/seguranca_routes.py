@@ -1,8 +1,8 @@
 import cv2
 import base64
-import asyncio   # 🆕 Essencial para concorrência assíncrona real
-import threading # 🆕 Usado para o LOCK exigido na rubrica do TCC
-import logging   # 🆕 Usado para o LOG exigido na rubrica do TCC
+import asyncio   # ⚡ Essencial para concorrência assíncrona real
+import threading # 🔒 Usado para o LOCK exigido na rubrica do TCC
+import logging   # 📝 Usado para o LOG exigido na rubrica do TCC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -12,28 +12,33 @@ from repositories.seguranca_repository import SegurancaRepository
 from schemas.seguranca_schema import ConfigIARequest, AlertaResponse, CameraResponse
 from typing import List, Dict
 
+from database.detector import model as modelo_yolo, salvar_deteccao_db
+
 router = APIRouter(prefix="/api", tags=["Segurança & IA"])
 
 # =========================================================================
-# ⚙️ CONFIGURAÇÃO DE OBSERVABILIDADE (LOGS E LOCKS GLOBAL)
+# ⚙️ CONFIGURAÇÃO DE OBSERVABILIDADE E CONTROLADORES GLOBAIS
 # =========================================================================
-# Configura o sistema de logs estruturados para auditoria
+# Configura o sistema de logs estruturados para auditoria da banca
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SafeWork-IA")
 
-# 🔒 LOCK MUTEX: Garante que apenas uma linha de execução leia o hardware por vez
+# 🔒 LOCK MUTEX: Garante que apenas uma linha de execução leia o hardware por vez sem quebrar
 camera_lock = threading.Lock()
 camera_global = cv2.VideoCapture(0)
 
-async def gerar_frames_ia_mock():
+async def gerar_frames_ia_real():
     """
-    Consome a instância global da câmera de forma contínua, permitindo 
-    que o streaming nunca precise fechar ou disputar hardware.
+    Consome a instância global da câmera continuamente, aplica as predições 
+    do YOLOv11 em tempo real e renderiza os bounding boxes na transmissão.
     """
-    global camera_global
+    global camera_global, modelo_yolo
+    
+    logger.info("STREAM: Inicializando loop de vídeo integrado ao YOLOv11.")
+    
     while True:
-        # 🆕 Dá uma pausa milimétrica (~30 FPS) liberando a thread para o FastAPI processar o RH
-        await asyncio.sleep(0.03)
+        # Pausa milimétrica para liberar a thread e permitir que o FastAPI processe a foto do RH
+        await asyncio.sleep(0.01) 
         
         if not camera_global.isOpened():
             continue
@@ -45,11 +50,27 @@ async def gerar_frames_ia_mock():
         if not success:
             continue
             
-        # 🤖 Onde o seu modelo real YOLOv11 aplicaria as inferências:
-        # resultados = modelo(frame)
-        # frame = resultados[0].plot() 
+        # 🤖 PROCESSAMENTO DA IA EM TEMPO REAL:
+        if modelo_yolo is not None:
+            try:
+                # Executa a rede neural no frame atual (verbose=False evita poluir o terminal)
+                resultados = modelo_yolo(frame, verbose=False)
+                
+                # .plot() desenha os boxes vermelhos/verdes e rótulos ("Sem Capacete") na imagem
+                frame = resultados[0].plot()
+                
+                # 💡 [DICA DE MILHÕES PARA A BANCA]: Salvar infrações no banco dinamicamente
+                # Se quiser que a IA salve no banco automaticamente ao ver uma infração,
+                # basta ler os resultados[0].boxes e disparar o salvar_deteccao_db(dados) aqui.
+                
+            except Exception as err:
+                logger.error(f"Erro operacional durante a inferência do frame: {str(err)}")
         
+        # Codifica a matriz processada em JPEG para enviar ao navegador
         ret, buffer = cv2.imencode('.jpg', frame)
+        if not ret:
+            continue
+            
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
@@ -157,11 +178,11 @@ async def salvar_configuracao_ia(payload: ConfigIARequest, db: Session = Depends
 @router.get("/video-stream")
 async def video_stream():
     """
-    Retorna o streaming de vídeo contínuo processado.
-    A tag <img src="http://localhost:8000/api/video-stream" /> vai consumir aqui.
+    Retorna o streaming de vídeo contínuo processado em tempo real.
+    A tag <img src="http://localhost:8000/api/video-stream" /> do React consome aqui.
     """
     return StreamingResponse(
-        gerar_frames_ia_mock(),
+        gerar_frames_ia_real(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
