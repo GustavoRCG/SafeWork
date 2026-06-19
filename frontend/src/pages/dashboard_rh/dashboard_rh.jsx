@@ -20,7 +20,6 @@ import "./dashboard_rh.css";
 function DashboardRH() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
 
   // 🧭 Controla se mostra o 'dashboard' (tabela/métricas) ou o 'cadastro' (formulário/Face ID)
   const [visaoAtual, setVisaoAtual] = useState("dashboard");
@@ -41,10 +40,13 @@ function DashboardRH() {
   const [setor, setSetor] = useState("");
   const [epiObrigatorio, setEpiObrigatorio] = useState("Capacete, Colete");
 
-  // Estados do Controle da Câmera
+  // Estados do Controle da Câmera (Centralizada no Backend)
   const [cameraAtiva, setCameraAtiva] = useState(false);
   const [fotoCapturada, setFotoCapturada] = useState(null);
   const [salvandoCadastro, setSalvandoCadastro] = useState(false);
+
+  // 💡 Define dinamicamente a URL base do backend para o streaming de vídeo
+  const baseURL = api.defaults.baseURL || "http://localhost:8000";
 
   // 🔐 Carrega dados iniciais do Dashboard do RH
   const carregarDadosPainel = async () => {
@@ -53,9 +55,8 @@ function DashboardRH() {
       const usuarioAtual = auth.currentUser;
       if (!usuarioAtual) return;
 
-      // Busca o token JWT síncrono para autenticação no FastAPI Middleware
       const token = await usuarioAtual.getIdToken();
-      const idEmpresa = 1; // ID estático simulando o escopo da empresa logada
+      const idEmpresa = 1;
 
       const [resHistorico, resMetricas] = await Promise.all([
         api.get(`/ocorrencias/empresa/${idEmpresa}`, {
@@ -82,75 +83,49 @@ function DashboardRH() {
     return () => unsubscribe();
   }, []);
 
-  // 📷 Liga a Câmera e força a vinculação do stream ao elemento <video>
-  const ligarCamera = async () => {
+  // 📷 Liga o monitoramento visual consumindo o feed ativo do Python
+  const ligarCamera = () => {
     setFotoCapturada(null);
+    setCameraAtiva(true);
+  };
+
+  // ✂️ Solicita ao Backend o frame atual capturado da webcam controlada pela IA
+  const capturarFoto = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: "user" },
-      });
+      setSalvandoCadastro(true);
+      const response = await api.get("/api/monitoramento/capturar-frame");
 
-      streamRef.current = stream;
-      setCameraAtiva(true);
-
-      // Timeout tático para assegurar a montagem prévia do elemento <video> no DOM pelo React
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current
-            .play()
-            .catch((e) => console.error("Erro no play do vídeo:", e));
-        }
-      }, 150);
+      if (response.data && response.data.imagem_base64) {
+        setFotoCapturada(response.data.imagem_base64);
+        setCameraAtiva(false);
+      } else {
+        alert("O servidor de IA não retornou um frame válido.");
+      }
     } catch (err) {
-      console.error("Erro ao acessar a webcam:", err);
+      console.error("Erro ao solicitar captura de frame ao backend:", err);
       alert(
-        "Não foi possível detectar ou acessar a câmera. Verifique as permissões do seu navegador.",
+        "Não foi possível capturar a imagem do servidor de IA. Verifique a conexão.",
       );
+    } finally {
+      setSalvandoCadastro(false);
     }
   };
 
-  // ✂️ Captura o frame atual renderizado no elemento de vídeo e converte em Base64
-  const capturarFoto = () => {
-    if (videoRef.current) {
-      const video = videoRef.current;
-      const canvas = document.createElement("canvas");
-
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-
-      const ctx = canvas.getContext("2d");
-
-      // Aplicação de espelhamento horizontal (Inversão simétrica da matriz de pixels)
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Codificação de compressão de imagem para String textual em formato URI Base64
-      const imagemBase64 = canvas.toDataURL("image/jpeg", 0.9);
-      setFotoCapturada(imagemBase64);
-      desligarStreamCamera();
-    }
-  };
-
-  // Desliga as faixas de hardware ativas do dispositivo multimídia
   const desligarStreamCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
     setCameraAtiva(false);
   };
 
-  // 💡 Procure pela função de cadastro perto da linha 195 no seu dashboard_rh.jsx:
+  // 💡 Envio do formulário integrado ao endpoint protegido
   const handleCadastro = async (e) => {
     e.preventDefault();
 
+    if (!fotoCapturada) {
+      alert("A captura da biometria facial (Face ID) é obrigatória.");
+      return;
+    }
+
     try {
+      setSalvandoCadastro(true);
       const usuarioAtual = auth.currentUser;
       if (!usuarioAtual) {
         alert("Sessão expirada. Faça login novamente.");
@@ -158,23 +133,18 @@ function DashboardRH() {
       }
 
       const token = await usuarioAtual.getIdToken();
-
-      // 1. Garante que o CPF vá limpo apenas com números (evita quebra de tamanho)
       const cpfLimpo = cpf.replace(/\D/g, "");
-
-      // 2. Cria a data no formato ISO que o Python (Pydantic/date) exige
       const dataHoje = new Date().toISOString().split("T")[0];
 
-      // 3. Monta o payload exatamente com os campos que o backend espera
       const novoColaborador = {
-        id_empresa: 1, // ID corporativo
+        id_empresa: 1,
         nome: nome.trim(),
         cpf: cpfLimpo,
         cargo: cargo.trim(),
         data_admissao: dataHoje,
         setor: setor.trim(),
         epi_obrigatorio: epiObrigatorio,
-        face_id_image: fotoCapturada, // String Base64 da biometria facial
+        face_id_image: fotoCapturada,
       };
 
       await api.post("/funcionarios/", novoColaborador, {
@@ -182,16 +152,22 @@ function DashboardRH() {
       });
 
       alert("Colaborador indexado e Face ID registrado com sucesso!");
-      // ... restante da sua lógica de fechar modal ou limpar campos ...
+
+      // Limpa formulário e retorna pro painel principal atualizado
+      setNome("");
+      setCpf("");
+      setCargo("");
+      setSetor("");
+      setFotoCapturada(null);
+      setVisaoAtual("dashboard");
+      carregarDadosPainel();
     } catch (erro) {
       console.error("Erro ao cadastrar funcionário:", erro);
-
-      // 🔍 Esse bloco vai capturar e te mostrar no alert o campo exato caso ainda falte algo
       if (erro.response && erro.response.data && erro.response.data.detail) {
         const detalheDoErro = erro.response.data.detail;
         if (Array.isArray(detalheDoErro)) {
           const listaDeErros = detalheDoErro
-            .map((err) => `• Campo [${err.loc[1]}]: ${err.msg}`)
+            .map((err) => `• Campo [${err.loc[1] || "dado"}]: ${err.msg}`)
             .join("\n");
           alert(`Erro de validação no Backend:\n\n${listaDeErros}`);
         } else {
@@ -200,8 +176,11 @@ function DashboardRH() {
       } else {
         alert("Falha operacional ao persistir dados.");
       }
+    } finally {
+      setSalvandoCadastro(false);
     }
   };
+
   const handleLogout = () => {
     signOut(auth).then(() => {
       localStorage.removeItem("user_profile");
@@ -406,7 +385,7 @@ function DashboardRH() {
             </form>
           </div>
 
-          {/* Lado Direito: Visualizador de Vídeo / Câmera */}
+          {/* Lado Direito: Visualizador de Vídeo de IA */}
           <div className="cadastro-camera-card">
             <div className="camera-section-header">
               <h2>Biometria Facial (Face ID)</h2>
@@ -416,7 +395,6 @@ function DashboardRH() {
               </p>
             </div>
 
-            {/* Viewport preta controlada */}
             <div className="camera-viewport-display">
               {fotoCapturada ? (
                 <div className="preview-image-container">
@@ -430,12 +408,18 @@ function DashboardRH() {
                   </div>
                 </div>
               ) : cameraAtiva ? (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
+                /* Consome dinamicamente o fluxo do Python sem roubar o hardware de imagem */
+                <img
+                  src={`${baseURL}/api/video-stream`}
+                  alt="Transmissão de Vídeo da IA"
                   className="live-video-stream"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={() => {
+                    alert(
+                      "O fluxo de vídeo da IA não foi detectado no servidor.",
+                    );
+                    setCameraAtiva(false);
+                  }}
                 />
               ) : (
                 <div className="camera-placeholder-box">
@@ -454,14 +438,18 @@ function DashboardRH() {
                 <button
                   type="button"
                   onClick={capturarFoto}
+                  disabled={salvandoCadastro}
                   className="btn-trigger-capture"
                 >
-                  <Camera size={18} /> Registrar Frame Facial
+                  <Camera size={18} />{" "}
+                  {salvandoCadastro
+                    ? "Capturando..."
+                    : "Registrar Frame Facial"}
                 </button>
               ) : (
                 <button
                   type="button"
-                  onClick={ligarCamera}
+                  onClick={fotoCapturada ? ligarCamera : ligarCamera}
                   className="btn-toggle-camera"
                 >
                   {fotoCapturada ? (

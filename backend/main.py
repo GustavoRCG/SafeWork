@@ -6,8 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes
 from database import database
-from database import models  # Vai carregar o database/models/__init__.py de forma automática
-
+from database import models  
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
