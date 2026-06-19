@@ -83,6 +83,37 @@ function DashboardRH() {
     return () => unsubscribe();
   }, []);
 
+  // 🎛️ Disparador do interruptor do YOLO para otimização de CPU/GPU no TCC
+  useEffect(() => {
+    const alternarEstadoIA = async () => {
+      try {
+        if (visaoAtual === "cadastro") {
+          // Desativa o YOLO para receber o streaming limpo e veloz
+          await api.post("/api/monitoramento/yolo/desativar");
+        } else {
+          // Reativa o monitoramento de EPI assim que voltar para a tabela
+          await api.post("/api/monitoramento/yolo/ativar");
+        }
+      } catch (err) {
+        console.error(
+          "Erro ao sincronizar interruptor da IA com o backend:",
+          err,
+        );
+      }
+    };
+
+    alternarEstadoIA();
+
+    // 🧼 Função de limpeza: Garante que a IA seja reativada se o usuário sair da página
+    return () => {
+      api
+        .post("/api/monitoramento/yolo/ativar")
+        .catch((err) =>
+          console.error("Erro ao resetar segurança da IA no cleanup:", err),
+        );
+    };
+  }, [visaoAtual]);
+
   // 📷 Liga o monitoramento visual consumindo o feed ativo do Python
   const ligarCamera = () => {
     setFotoCapturada(null);
@@ -181,7 +212,14 @@ function DashboardRH() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Força a reativação da IA antes de destruir a sessão do usuário
+      await api.post("/api/monitoramento/yolo/ativar");
+    } catch (e) {
+      console.error("Erro ao reativar IA durante o logout:", e);
+    }
+
     signOut(auth).then(() => {
       localStorage.removeItem("user_profile");
       navigate("/login");
@@ -408,7 +446,6 @@ function DashboardRH() {
                   </div>
                 </div>
               ) : cameraAtiva ? (
-                /* Consome dinamicamente o fluxo do Python sem roubar o hardware de imagem */
                 <img
                   src={`${baseURL}/api/video-stream`}
                   alt="Transmissão de Vídeo da IA"
@@ -449,7 +486,7 @@ function DashboardRH() {
               ) : (
                 <button
                   type="button"
-                  onClick={fotoCapturada ? ligarCamera : ligarCamera}
+                  onClick={ligarCamera}
                   className="btn-toggle-camera"
                 >
                   {fotoCapturada ? (

@@ -3,7 +3,7 @@ import base64
 import asyncio   # ⚡ Essencial para concorrência assíncrona real
 import threading # 🔒 Usado para o LOCK exigido na rubrica do TCC
 import logging   # 📝 Usado para o LOG exigido na rubrica do TCC
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from database.database import get_db
@@ -27,10 +27,11 @@ logger = logging.getLogger("SafeWork-IA")
 camera_lock = threading.Lock()
 camera_global = cv2.VideoCapture(0)
 
-async def gerar_frames_ia_real():
+async def gerar_frames_ia_real(request: Request):
     """
     Consome a instância global da câmera continuamente, aplica as predições 
     do YOLOv11 em tempo real e renderiza os bounding boxes na transmissão.
+    Se a flag 'cadastro_rh_ativo' estiver ligada, ignora o YOLO para poupar CPU/GPU.
     """
     global camera_global, modelo_yolo
     
@@ -50,8 +51,12 @@ async def gerar_frames_ia_real():
         if not success:
             continue
             
+        # 🎛️ INTERRUPTOR DA IA (Otimização para a Banca do TCC):
+        # Verifica se o RH está na tela de cadastro (flag definida dinamicamente via endpoints)
+        cadastro_ativo = getattr(request.app.state, "cadastro_rh_ativo", False)
+        
         # 🤖 PROCESSAMENTO DA IA EM TEMPO REAL:
-        if modelo_yolo is not None:
+        if modelo_yolo is not None and not cadastro_ativo:
             try:
                 # Executa a rede neural no frame atual (verbose=False evita poluir o terminal)
                 resultados = modelo_yolo(frame, verbose=False)
@@ -65,6 +70,10 @@ async def gerar_frames_ia_real():
                 
             except Exception as err:
                 logger.error(f"Erro operacional durante a inferência do frame: {str(err)}")
+        elif cadastro_ativo:
+            # Renderiza um indicador visual sutil no topo do streaming para provar à banca a otimização de hardware
+            cv2.putText(frame, "MODO CADASTRO RH: YOLO EM ESPERA", (15, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2, cv2.LINE_AA)
         
         # Codifica a matriz processada em JPEG para enviar ao navegador
         ret, buffer = cv2.imencode('.jpg', frame)
@@ -74,6 +83,28 @@ async def gerar_frames_ia_real():
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+# =========================================================================
+# 🎛️ ENDPOINTS DE CONTROLE DO INTERRUPTOR DA IA (CHAMADOS PELO REACT)
+# =========================================================================
+@router.post("/monitoramento/yolo/desativar")
+async def desativar_yolo(request: Request):
+    """
+    Desativa as inferências do YOLOv11 para poupar processamento
+    enquanto o RH captura as fotos de Face ID.
+    """
+    request.app.state.cadastro_rh_ativo = True
+    logger.info("INTERRUPTOR IA: YOLOv11 suspenso temporariamente para cadastro do RH.")
+    return {"status": "YOLO desativado", "cadastro_rh_ativo": True}
+
+@router.post("/monitoramento/yolo/ativar")
+async def ativar_yolo(request: Request):
+    """
+    Reativa as inferências em tempo real do YOLOv11 no chão de fábrica.
+    """
+    request.app.state.cadastro_rh_ativo = False
+    logger.info("INTERRUPTOR IA: YOLOv11 reativado com sucesso para auditoria de EPI.")
+    return {"status": "YOLO ativo", "cadastro_rh_ativo": False}
 
 # =========================================================================
 # 📸 ENDPOINT EXCLUSIVO PARA O CADASTRO DO RH (Captura Dinâmica)
@@ -176,13 +207,13 @@ async def salvar_configuracao_ia(payload: ConfigIARequest, db: Session = Depends
 # 4. STREAMING DE VÍDEO EM TEMPO REAL (MJPEG)
 # =========================================================================
 @router.get("/video-stream")
-async def video_stream():
+async def video_stream(request: Request):
     """
     Retorna o streaming de vídeo contínuo processado em tempo real.
-    A tag <img src="http://localhost:8000/api/video-stream" /> do React consome aqui.
+    Injeta o objeto 'request' para que o gerador saiba o estado do interruptor.
     """
     return StreamingResponse(
-        gerar_frames_ia_real(),
+        gerar_frames_ia_real(request),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 

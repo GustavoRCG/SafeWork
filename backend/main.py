@@ -37,6 +37,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.state.cadastro_rh_ativo = False
+
+@app.post("/api/monitoramento/yolo/desativar", tags=["IA Controle"])
+async def desativar_yolo():
+    app.state.cadastro_rh_ativo = True
+    return {"status": "YOLO congelado. Modo cadastro ativado."}
+
+@app.post("/api/monitoramento/yolo/ativar", tags=["IA Controle"])
+async def ativar_yolo():
+    app.state.cadastro_rh_ativo = False
+    return {"status": "YOLO reativado. Monitoramento de EPI online."}
+
 # 5. Configuração de CORS (Libera acesso para o Frontend React/Vue/Mobile)
 app.add_middleware(
     CORSMiddleware,
