@@ -1,5 +1,6 @@
 import cv2
 import base64
+import time
 import asyncio   # ⚡ Essencial para concorrência assíncrona real
 import threading # 🔒 Usado para o LOCK exigido na rubrica do TCC
 import logging   # 📝 Usado para o LOG exigido na rubrica do TCC
@@ -11,7 +12,7 @@ from database.models.seguranca import DeteccaoModel, CameraModel
 from repositories.seguranca_repository import SegurancaRepository
 from schemas.seguranca_schema import ConfigIARequest, AlertaResponse, CameraResponse
 from typing import List, Dict
-
+from datetime import timedelta
 from database.detector import model as modelo_yolo, salvar_deteccao_db
 
 router = APIRouter(prefix="/api", tags=["Segurança & IA"])
@@ -27,55 +28,112 @@ logger = logging.getLogger("SafeWork-IA")
 camera_lock = threading.Lock()
 camera_global = cv2.VideoCapture(0)
 
+# ⏱️ CONTROLE DE ANTISPAM E DEBOUNCE PARA INFRAÇÕES
+# Chave: "id_camera:classe_infracao" -> Valor: timestamp do time.time()
+ultimos_alertas: Dict[str, float] = {}
+INTERVALO_ALERTA_SEGUNDOS = 30.0  # Tempo de espera para registrar a mesma infração na mesma câmera
+
+# =========================================================================
+# 🧠 NÚCLEO DE PROCESSAMENTO DE VÍDEO + IA (STREAMING)
+# =========================================================================
 async def gerar_frames_ia_real(request: Request):
     """
     Consome a instância global da câmera continuamente, aplica as predições 
-    do YOLOv11 em tempo real e renderiza os bounding boxes na transmissão.
-    Se a flag 'cadastro_rh_ativo' estiver ligada, ignora o YOLO para poupar CPU/GPU.
+    do YOLOv11 com pulo de frames para otimização de hardware e registra 
+    infrações respeitando o intervalo estendido.
     """
-    global camera_global, modelo_yolo
+    global camera_global, modelo_yolo, ultimos_alertas
     
-    logger.info("STREAM: Inicializando loop de vídeo integrado ao YOLOv11.")
+    logger.info("STREAM: Inicializando loop de vídeo otimizado com controle de carga.")
+    
+    traducao_classes = {
+        "no-hardhat": "Capacete",
+        "no-safety vest": "Colete",
+        "no-mask": "Máscara"
+    }
+    
+    # ⏱️ Contador de frames para aliviar a IA
+    contador_frames = 0
+    RAIO_PROCESSAMENTO = 15  # 🌟 Executa a IA apenas a cada 15 frames (Aproximadamente 2 vezes por segundo)
     
     while True:
-        # Pausa milimétrica para liberar a thread e permitir que o FastAPI processe a foto do RH
         await asyncio.sleep(0.01) 
         
         if not camera_global.isOpened():
             continue
             
-        # 🔒 Adquire o lock para ler o frame da webcam de forma exclusiva e segura
         with camera_lock:
             success, frame = camera_global.read()
             
         if not success:
             continue
             
-        # 🎛️ INTERRUPTOR DA IA (Otimização para a Banca do TCC):
-        # Verifica se o RH está na tela de cadastro (flag definida dinamicamente via endpoints)
         cadastro_ativo = getattr(request.app.state, "cadastro_rh_ativo", False)
         
-        # 🤖 PROCESSAMENTO DA IA EM TEMPO REAL:
+        # Incrementa o contador de frames
+        contador_frames += 1
+        
+        # 🤖 PROCESSAMENTO DA IA APENAS NO FRAME DETERMINADO:
         if modelo_yolo is not None and not cadastro_ativo:
             try:
-                # Executa a rede neural no frame atual (verbose=False evita poluir o terminal)
-                resultados = modelo_yolo(frame, verbose=False)
-                
-                # .plot() desenha os boxes vermelhos/verdes e rótulos ("Sem Capacete") na imagem
-                frame = resultados[0].plot()
-                
-                # 💡 [DICA DE MILHÕES PARA A BANCA]: Salvar infrações no banco dinamicamente
-                # Se quiser que a IA salve no banco automaticamente ao ver uma infração,
-                # basta ler os resultados[0].boxes e disparar o salvar_deteccao_db(dados) aqui.
-                
+                # Se NÃO for o frame de processamento, usamos a predição anterior/limpa apenas para exibição
+                # Mas se for o frame escolhido, o YOLO entra em ação
+                if contador_frames % RAIO_PROCESSAMENTO == 0:
+                    resultados = modelo_yolo(frame, verbose=False)
+                    frame = resultados[0].plot()
+                    
+                    boxes = resultados[0].boxes
+                    if boxes is not None and len(boxes) > 0:
+                        for box in boxes:
+                            cls_id = int(box.cls[0].item())
+                            confianca = float(box.conf[0].item())
+                            
+                            nome_classe_original = resultados[0].names[cls_id].lower().strip()
+                            
+                            if confianca > 0.60 and nome_classe_original in traducao_classes:
+                                tipo_falta = traducao_classes[nome_classe_original]
+                                id_camera_atual = 1  
+                                chave_alerta = f"{id_camera_atual}:{nome_classe_original}"
+                                tempo_atual = time.time()
+                                
+                                ja_registrado = chave_alerta in ultimos_alertas
+                                tempo_passado = (tempo_atual - ultimos_alertas.get(chave_alerta, 0)) if ja_registrado else 999
+                                
+                                # Verifica se estourou o novo tempo estendido (ex: 30 segundos)
+                                if not ja_registrado or tempo_passado > INTERVALO_ALERTA_SEGUNDOS:
+                                    
+                                    dados_deteccao = {
+                                        "id_camera": id_camera_atual,
+                                        "tipo_falta_epi": f"Sem {tipo_falta}",
+                                        "confianca_ia": confianca
+                                    }
+                                    
+                                    try:
+                                        salvar_deteccao_db(dados_deteccao)
+                                        ultimos_alertas[chave_alerta] = tempo_atual
+                                        logger.info(f"🚨 [AUDITORIA] Alerta persistido. Próximo registro liberado em {INTERVALO_ALERTA_SEGUNDOS}s.")
+                                    except Exception as err_db:
+                                        logger.error(f"❌ [BANCO] Erro ao salvar: {str(err_db)}")
+                                else:
+                                    # Log sutil para seu controle, sem sobrecarregar o terminal
+                                    pass
+                else:
+                    # Nos frames intermediários, o sistema não chama o .predict() do YOLO.
+                    # Opcional: Se quiser mostrar os quadrados mesmo nos frames pulados, 
+                    # o ideal para o TCC é deixar o vídeo limpo ou usar um histórico rápido.
+                    pass
+                                        
             except Exception as err:
-                logger.error(f"Erro operacional durante a inferência do frame: {str(err)}")
+                logger.error(f"Erro operacional: {str(err)}")
+                
         elif cadastro_ativo:
-            # Renderiza um indicador visual sutil no topo do streaming para provar à banca a otimização de hardware
             cv2.putText(frame, "MODO CADASTRO RH: YOLO EM ESPERA", (15, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2, cv2.LINE_AA)
         
-        # Codifica a matriz processada em JPEG para enviar ao navegador
+        # Limpa o contador para não estourar a memória com números gigantescos no TCC
+        if contador_frames > 10000:
+            contador_frames = 0
+
         ret, buffer = cv2.imencode('.jpg', frame)
         if not ret:
             continue
@@ -83,7 +141,6 @@ async def gerar_frames_ia_real(request: Request):
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
 # =========================================================================
 # 🎛️ ENDPOINTS DE CONTROLE DO INTERRUPTOR DA IA (CHAMADOS PELO REACT)
 # =========================================================================
@@ -98,7 +155,7 @@ async def desativar_yolo(request: Request):
     return {"status": "YOLO desativado", "cadastro_rh_ativo": True}
 
 @router.post("/monitoramento/yolo/ativar")
-async def ativar_yolo(request: Request):
+async def activar_yolo(request: Request):
     """
     Reativa as inferências em tempo real do YOLOv11 no chão de fábrica.
     """
@@ -117,14 +174,13 @@ async def capturar_frame_rh():
     """
     global camera_global
     
-    # 📝 LOGS DE EXECUÇÃO: Atende ao critério de Observabilidade da rubrica
     logger.info("MÓDULO RH: Solicitação de captura de frame recebida.")
     
     if not camera_global.isOpened():
         logger.error("MÓDULO RH: Falha crítica - Câmera global fechada ou inacessível.")
         raise HTTPException(status_code=500, detail="A webcam global não está ativa ou falhou.")
     
-    # 🔒 LOCK EXCLUSIVO: Solicita acesso momentâneo ao frame para não conflitar com o stream
+    # 🔒 LOCK EXCLUSIVO: Garante que a leitura do frame para a foto não quebre o streaming MJPEG
     with camera_lock:
         logger.info("MÓDULO RH: Lock de concorrência adquirido com sucesso.")
         success, frame = camera_global.read()
@@ -133,14 +189,11 @@ async def capturar_frame_rh():
         logger.error("MÓDULO RH: Falha ao capturar e decodificar a matriz da imagem atual.")
         raise HTTPException(status_code=500, detail="Não foi possível ler o frame atual da webcam.")
         
-    # Converte o frame bruto tridimensional do OpenCV em formato JPEG na memória
     ret, buffer = cv2.imencode('.jpg', frame)
     if not ret:
         raise HTTPException(status_code=500, detail="Erro interno ao codificar imagem.")
         
-    # Converte os bytes do JPEG em uma String Base64 para trafegar via JSON puro
     img_base64 = base64.b64encode(buffer).decode('utf-8')
-    
     logger.info("MÓDULO RH: Frame convertido para Base64 com sucesso. Payload despachado.")
     return {"imagem_base64": f"data:image/jpeg;base64,{img_base64}"}
 
@@ -150,17 +203,34 @@ async def capturar_frame_rh():
 @router.get("/alertas", response_model=List[AlertaResponse])
 async def obtener_historico_alertas(db: Session = Depends(get_db)):
     resultados = SegurancaRepository.listar_alertas(db)
-    return [
-        {
+    
+    alertas_formatados = []
+    for det, cam in resultados:
+        if det.data_hora:
+            try:
+                # Se o banco de dados insistir em entregar um objeto com timezone (+03:00) 
+                # que joga a hora pra frente, nós limpamos os metadados de fuso.
+                dt_puro = det.data_hora.replace(tzinfo=None)
+                
+                # 🕒 Caso o registro antigo (de 15h) ainda esteja poluindo visualmente, 
+                # o código abaixo garante o formato cru. Se você gerar uma infração AGORA,
+                # ela TEM que aparecer como 12:41 no topo da tabela.
+                timestamp_formatado = dt_puro.strftime("%d/%m/%Y %H:%M:%S")
+            except Exception:
+                timestamp_formatado = "Erro na data"
+        else:
+            timestamp_formatado = "Sem data"
+            
+        alertas_formatados.append({
             "id": f"ALT-{det.id_deteccao}",
-            "timestamp": det.data_hora.strftime("%d/%m/%Y %H:%M:%S") if det.data_hora else "Sem data",
+            "timestamp": timestamp_formatado,
             "camera": cam.nome_camera or f"Câmera #{cam.id_camera}",
             "classe": det.tipo_falta_epi,
             "criticidade": "Crítico" if float(det.confianca_ia or 1) > 0.75 else "Moderado",
             "status": "Pendente"
-        } for det, cam in resultados
-    ]
-
+        })
+        
+    return alertas_formatados
 # =========================================================================
 # 2. GERENCIAMENTO DE CÂMERAS
 # =========================================================================
@@ -250,7 +320,7 @@ async def obtener_eventos_recentes(db: Session = Depends(get_db)):
         {
             "id": det.id_deteccao,
             "tipo": "CRITICAL" if det.tipo_falta_epi and det.tipo_falta_epi != "Nenhum" else "INFO",
-            "titulo": f"Sem {det.tipo_falta_epi}" if det.tipo_falta_epi else "Dispositivo Conectado",
+            "titulo": f"{det.tipo_falta_epi}" if det.tipo_falta_epi else "Dispositivo Conectado",
             "local": cam.nome_camera or f"Câmera #{cam.id_camera}",
             "hora": det.data_hora.strftime("%H:%M:%S") if det.data_hora else "Agora"
         } for det, cam in resultados

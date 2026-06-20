@@ -6,20 +6,34 @@ class SegurancaRepository:
     
     @staticmethod
     def listar_alertas(db: Session):
-        return db.query(DeteccaoModel, CameraModel).\
-            join(CameraModel, DeteccaoModel.id_camera == CameraModel.id_camera).\
-            order_by(DeteccaoModel.data_hora.desc()).all()
+        """
+        Busca as detecções trazendo os modelos de Câmera associados
+        e ordenando sempre pelas infrações mais recentes primeiro (ID decrescente).
+        """
+        return db.query(DeteccaoModel, CameraModel)\
+                 .join(CameraModel, DeteccaoModel.id_camera == CameraModel.id_camera)\
+                 .order_by(DeteccaoModel.id_deteccao.desc())\
+                 .all()
 
     @staticmethod
     def listar_cameras(db: Session):
+        """
+        Retorna a lista de todas as câmeras cadastradas no sistema.
+        """
         return db.query(CameraModel).all()
 
     @staticmethod
-    def obter_config_ia(db: Session):
+    def obtener_config_ia(db: Session):
+        """
+        Recupera as configurações globais de sensibilidade e regras da IA.
+        """
         return db.query(ConfigIAModel).first()
 
     @staticmethod
     def salvar_config_ia(db: Session, payload: ConfigIARequest):
+        """
+        Atualiza ou cria os parâmetros operacionais da IA no banco de dados.
+        """
         config = db.query(ConfigIAModel).first()
         if not config:
             config = ConfigIAModel()
