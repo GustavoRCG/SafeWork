@@ -1,0 +1,542 @@
+/* ==========================================================================
+   📦 CONTAINER PRINCIPAL (ONBOARDING) - MESMO PADRÃO DO LOGIN-CONTAINER
+   ========================================================================== */
+.onboarding-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #0b0f19;
+  /* Iluminação radial idêntica ao login */
+  background-image: radial-gradient(
+    circle at 50% 15%,
+    rgba(30, 41, 59, 0.5) 0%,
+    transparent 50%
+  );
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  padding: 40px 20px;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   🎯 CORPO PRINCIPAL E GRADES (MAIN & CARDS)
+   ========================================================================== */
+.onboarding-main {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2; /* Acima das luzes de fundo */
+  margin-top: 20px;
+}
+
+/* Card unificado (Passo 1 e Passo 3) */
+.onboarding-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  padding: 40px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px; /* Alinhado com o login-form-wrapper */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+/* Forçar limite de largura menor para checkout se necessário */
+.max-w-md {
+  max-width: 460px;
+}
+
+/* ==========================================================================
+   🔖 CABEÇALHO E BRAND LOGO (LOGOTIPO COM GLOW EFFECT)
+   ========================================================================== */
+.onboarding-header {
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand-logo {
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 12px 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  /* Sombra brilhante azulada idêntica ao logo-box */
+  box-shadow:
+    0 0 40px 5px rgba(56, 189, 248, 0.15),
+    inset 0 0 12px rgba(56, 189, 248, 0.1);
+}
+
+.logo-red {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+.logo-white {
+  color: #ffffff;
+}
+
+.logo-sub {
+  color: #38bdf8;
+  font-size: 9px;
+  letter-spacing: 3px;
+  margin-top: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.step-indicator {
+  font-size: 12px;
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.1);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Títulos internos dos Cards */
+.card-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 28px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.highlight-id {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   📋 ESTRUTURA DE FORMULÁRIOS E INPUTS (MESMO PADRÃO DO LOGIN)
+   ========================================================================== */
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  font-size: 15px;
+  outline: none;
+  background-color: #0b0f19;
+  color: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* ==========================================================================
+   🔒 🆕 SEÇÃO: VALIDAÇÕES, ALERTA DE ERRO E FORÇA DA SENHA
+   ========================================================================== */
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error-box-global {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.password-strength-wrapper {
+  margin-top: 8px;
+}
+
+.password-strength-label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  transition: color 0.2s ease;
+}
+
+.password-strength-bars {
+  display: flex;
+  gap: 4px;
+  margintop: 4px;
+}
+
+.password-bar {
+  height: 4px;
+  flex: 1;
+  background-color: #1e293b; /* Cor base vazia */
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+/* ==========================================================================
+   🔘 BOTÕES (PRIMÁRIO, SECUNDÁRIO E VOLTAR)
+   ========================================================================== */
+.btn-primary {
+  background-color: #1d4ed8;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.btn-primary:disabled {
+  background-color: #1e293b;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-secondary:hover {
+  background-color: #1e293b;
+  border-color: #475569;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-align: center;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.btn-back:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   📊 GRID DE PLANOS (PASSO 2) - BASEADO NO PROFILE-CARD
+   ========================================================================== */
+.plans-container {
+  width: 100%;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+  margin-top: 32px;
+}
+
+.plan-card {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 44px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  background-color: #131c35;
+  border-color: #2563eb;
+  box-shadow:
+    0 10px 30px -10px rgba(37, 99, 235, 0.3),
+    0 0 15px 1px rgba(37, 99, 235, 0.1);
+}
+
+/* Customização para o card Recomendado (Brilho Verde do Perfil Técnico) */
+.plan-card.recommended {
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+.plan-card.recommended:hover {
+  border-color: #059669;
+  box-shadow:
+    0 10px 30px -10px rgba(5, 150, 105, 0.3),
+    0 0 15px 1px rgba(5, 150, 105, 0.1);
+}
+
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 10px;
+  color: #059669;
+  background-color: rgba(5, 150, 105, 0.15);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.plan-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.plan-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.4;
+}
+
+.plan-price {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: baseline;
+}
+
+.price-period {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-features li {
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+/* ==========================================================================
+   💳 SELEÇÃO DE MÉTODOS DE PAGAMENTO (PASSO 3)
+   ========================================================================== */
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.payment-btn {
+  background-color: #0b0f19;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+/* Efeito Hover azulado (Padrão do login) */
+.payment-btn.group-blue:hover {
+  border-color: #2563eb;
+  background-color: #131c35;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+}
+
+/* Efeito Hover esmeralda para o Pix */
+.payment-btn.group-emerald:hover {
+  border-color: #059669;
+  background-color: rgba(5, 150, 105, 0.05);
+  box-shadow: 0 4px 20px rgba(5, 150, 105, 0.15);
+}
+
+.payment-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.payment-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.payment-icon {
+  font-size: 24px;
+}
+
+/* Visualização do Checkout Pix */
+.pix-checkout {
+  padding: 20px 0;
+}
+
+.pix-qr-placeholder {
+  background-color: #0b0f19;
+  border: 2px dashed #1e293b;
+  color: #64748b;
+  height: 200px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+/* ==========================================================================
+   🎬 RODAPÉ (FOOTER)
+   ========================================================================== */
+.onboarding-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #475569;
+  margin-top: 64px;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   📱 RESPONSIVIDADE (MEDIA QUERIES)
+   ========================================================================== */
+
+/* 💻 TELAS MÉDIAS / TABLETS (Até 1024px) */
+@media (max-width: 1024px) {
+  .onboarding-main {
+    max-width: 90%;
+  }
+  .plans-grid {
+    gap: 16px; /* Diminui o espaçamento dos planos para caber em tablets */
+  }
+  .plan-card {
+    padding: 32px 24px; /* Reduz levemente o padding interno dos cards */
+  }
+}
+
+/* 📱 CELULARES E DISPOSITIVOS PEQUENOS (Até 768px) */
+@media (max-width: 768px) {
+  .onboarding-container {
+    padding: 20px 12px; /* Diminui a margem externa para aproveitar a tela do celular */
+  }
+
+  .onboarding-main {
+    margin-top: 10px;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr; /* Transforma a grade de planos em uma coluna única */
+    gap: 20px;
+  }
+
+  .onboarding-card {
+    padding: 28px 20px; /* Deixa o formulário interno menos apertado no celular */
+    max-width: 100%; /* Garante que o card ocupe a largura total disponível */
+  }
+
+  .card-title {
+    font-size: 22px; /* Reduz o tamanho do título para não quebrar muitas linhas */
+  }
+
+  .brand-logo {
+    padding: 10px 20px; /* Reduz o tamanho do box do logo no topo */
+  }
+}
+
+/* Estilização do ícone do olho */
+.eye-icon {
+  font-size: 18px;
+  color: #64748b; /* Cor cinza/azulada discreta padrão */
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+  user-select: none;
+}
+
+/* Quando passar o mouse no botão, o olho acende no azul do seu layout */
+.btn-toggle-password:hover .eye-icon {
+  color: #38bdf8; /* Azul neon idêntico ao logo-sub e focos */
+  transform: scale(1.1); /* Um leve efeito de zoom ao passar o mouse */
+}

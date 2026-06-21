@@ -6,8 +6,11 @@ import { auth } from "./firebaseConfig";
 import Login from "./pages/login/login";
 import DashboardSeguranca from "./pages/dashboard_seguranca/dashboard_seguranca";
 import DashboardRH from "./pages/dashboard_rh/dashboard_rh";
-import DashboardAdmin from "./pages/dashboard_admin/dashboard_admin"; // Novo Import
-import CadastroFuncionario from "./pages/dashboard_rh/cadastro_funcionario"; // Nova Tela de Cadastro de Funcionário
+import DashboardAdmin from "./pages/dashboard_admin/dashboard_admin";
+import CadastroFuncionario from "./pages/dashboard_rh/cadastro_funcionario";
+
+// Import do fluxo de Onboarding da Empresa
+import CadastroEmpresa from "./pages/dashboard_empresa/cadastro_empresa";
 
 function App() {
   const [usuarioLogado, setUsuarioLogado] = useState(null);
@@ -42,24 +45,31 @@ function App() {
   const getRedirecionamentoPadrao = () => {
     const perfilSalvo = localStorage.getItem("user_profile");
     if (perfilSalvo === "rh") return "/dashboard-rh";
-    if (perfilSalvo === "admin") return "/dashboard-admin"; // Desvio para o Admin
+    if (perfilSalvo === "admin") return "/dashboard-admin";
     return "/dashboard-seguranca";
   };
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* 1ª TELA ABSOLUTA: Quem acessa o sistema cai direto no Onboarding da Empresa */}
+        <Route path="/" element={<CadastroEmpresa />} />
+        <Route path="/empresa" element={<CadastroEmpresa />} />
+
+        {/* 2ª TELA: Após o checkout, o fluxo redireciona para cá para o vínculo do usuário */}
         <Route
           path="/login"
           element={
             !usuarioLogado ? (
               <Login />
             ) : (
+              // 3ª TELA: Se já autenticou no Firebase, o próprio componente Login lida com a Seleção de Perfil ou joga para o Dashboard correto
               <Navigate to={getRedirecionamentoPadrao()} />
             )
           }
         />
 
+        {/* Dashboards Protegidos */}
         <Route
           path="/dashboard-seguranca"
           element={
@@ -72,7 +82,6 @@ function App() {
           element={usuarioLogado ? <DashboardRH /> : <Navigate to="/login" />}
         />
 
-        {/* Nova Rota Protegida do Administrador */}
         <Route
           path="/dashboard-admin"
           element={
@@ -80,7 +89,15 @@ function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route
+          path="/cadastro-funcionario"
+          element={
+            usuarioLogado ? <CadastroFuncionario /> : <Navigate to="/login" />
+          }
+        />
+
+        {/* Qualquer rota desconhecida joga de volta para o começo do Onboarding */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

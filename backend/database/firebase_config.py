@@ -6,7 +6,7 @@ from firebase_admin import credentials, auth
 
 # 1. Inicialização do Firebase Admin SDK
 # Aponta para o arquivo JSON de chaves na raiz da pasta do backend
-JSON_PATH = "safework-bc1aa-firebase-adminsdk-fbsvc-89135f3f6d.json"
+JSON_PATH = "safework-bc1aa-firebase-adminsdk-fbsvc-749b8958de.json"
 
 if not firebase_admin._apps:
     if os.path.exists(JSON_PATH):

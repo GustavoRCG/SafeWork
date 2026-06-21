@@ -10,5 +10,6 @@ class Empresa(Base):
     id_plano = Column(Integer, ForeignKey("public.planos.id_plano"), nullable=True)
     cnpj = Column(String(18), unique=True, nullable=False)
     razao_social = Column(String(100), nullable=False)
-    status_signature = Column(String(20), default="ATIVO") # Alinhado com seu SQL 'status_assinatura'
+    status_assinatura = Column(String(20), default="ATIVO") # Alinhado com seu SQL 'status_assinatura'
     data_cadastro = Column(DateTime(timezone=True), server_default=func.now())
+    senhaempresa = Column(String(255), nullable=False) # Armazena o UID do Firebase para autenticação futura

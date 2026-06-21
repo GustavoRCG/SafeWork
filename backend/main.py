@@ -11,7 +11,7 @@ from database import models
 load_dotenv()
 
 # 2. Configuração do Caminho da Chave Firebase
-CHAVE_NAME = os.getenv("FIREBASE_KEY_PATH", "safework-bc1aa-firebase-adminsdk-fbsvc-89135f3f6d.json")
+CHAVE_NAME = os.getenv("FIREBASE_KEY_PATH", "safework-bc1aa-firebase-adminsdk-fbsvc-749b8958de.json")
 
 # Lógica para garantir que o Python ache o arquivo na raiz do projeto (SafeWork/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
