@@ -39,7 +39,7 @@ function HistoricoAlertas() {
     <div className="seguranca-page-container">
       <div className="page-header-block">
         <h2 className="page-title-text">
-          🚨 Histórico de Alertas de Não-Conformidade
+          Histórico de Alertas de Não-Conformidade
         </h2>
         <p className="page-subtitle-text">
           Logs de auditoria sincronizados via Axios com o banco de dados
@@ -131,15 +131,58 @@ function HistoricoAlertas() {
 }
 
 // ==========================================
-// COMPONENTE: RELATÓRIOS & BI
+// COMPONENTE: RELATÓRIOS & BI (DINÂMICO COM SEU AXIOS)
 // ==========================================
 function RelatoriosBI() {
-  const metricasBI = {
-    totalOcorrencias: 142,
-    taxaConformidade: "94.2%",
-    tempoMedioResposta: "14 min",
-    classeMaisFrequente: "Ausência de Capacete",
-  };
+  const [metricasBI, setMetricasBI] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    const buscarDadosBI = async () => {
+      try {
+        setLoading(true);
+        
+        // 🔐 Faz a requisição para a nova rota protegida.
+        // O Axios injeta automaticamente o token JWT e o backend identifica a empresa do técnico.
+        const response = await api.get("/api/metricas");
+        
+        setMetricasBI(response.data);
+        setErro(null);
+      } catch (err) {
+        console.error("Erro ao buscar indicadores de BI:", err);
+        const msg = err.response?.data?.detail || err.message || "Erro ao conectar com o servidor de BI.";
+        setErro(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    buscarDadosBI();
+  }, []);
+
+  // 🔄 Feedback visual enquanto os dados estão sendo processados
+  if (loading) {
+    return (
+      <div className="seguranca-page-container">
+        <div className="api-status-container animate-pulse">
+          <div className="spinner-tech"></div>
+          <p>Compilando indicadores analíticos da empresa...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ⚠️ Feedback visual caso ocorra alguma falha na rota
+  if (erro || !metricasBI) {
+    return (
+      <div className="seguranca-page-container">
+        <div className="api-status-container status-erro">
+          <p>❌ Falha de Conexão: {erro || "Nenhum dado retornado."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="seguranca-page-container">
@@ -151,6 +194,7 @@ function RelatoriosBI() {
         </p>
       </div>
 
+      {/* Grid de Cards Populado Dinamicamente */}
       <div className="bi-metrics-summary-grid">
         <div className="bi-summary-card">
           <span className="bi-card-label">Total de Ocorrências</span>
@@ -181,69 +225,59 @@ function RelatoriosBI() {
         </div>
       </div>
 
+      {/* Gráfico de Turnos Dinâmico e Animado */}
       <div className="bi-chart-wrapper-box" style={{ marginTop: "24px" }}>
         <h3 className="chart-section-title">
           Volumetria de Não-Conformidades por Turno
         </h3>
+        
         <div className="bi-mock-bar-chart">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            <span
-              style={{
-                color: "#94a3b8",
-                fontSize: "12px",
-                marginBottom: "8px",
-              }}
-            >
-              34
+          {/* Turno Matutino (A) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+            <span style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+              {metricasBI.turnos?.matutino ?? 0}
             </span>
-            <div className="chart-bar bar-turno-a"></div>
+            <div 
+              className="chart-bar bar-turno-a"
+              style={{ 
+                height: `${Math.min((metricasBI.turnos?.matutino ?? 0) * 2, 200)}px`,
+                backgroundColor: "#3b82f6",
+                transition: "height 0.6s ease-out"
+              }}
+            ></div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            <span
-              style={{
-                color: "#ef4444",
-                fontSize: "12px",
-                marginBottom: "8px",
-              }}
-            >
-              88
+
+          {/* Turno Vespertino (B) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+            <span style={{ color: "#ef4444", fontSize: "12px", marginBottom: "8px" }}>
+              {metricasBI.turnos?.vespertino ?? 0}
             </span>
-            <div className="chart-bar bar-turno-b"></div>
+            <div 
+              className="chart-bar bar-turno-b"
+              style={{ 
+                height: `${Math.min((metricasBI.turnos?.vespertino ?? 0) * 2, 200)}px`,
+                backgroundColor: "#ef4444",
+                transition: "height 0.6s ease-out"
+              }}
+            ></div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            <span
-              style={{
-                color: "#94a3b8",
-                fontSize: "12px",
-                marginBottom: "8px",
-              }}
-            >
-              20
+
+          {/* Turno Noturno (C) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+            <span style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+              {metricasBI.turnos?.noturno ?? 0}
             </span>
-            <div className="chart-bar bar-turno-c"></div>
+            <div 
+              className="chart-bar bar-turno-c"
+              style={{ 
+                height: `${Math.min((metricasBI.turnos?.noturno ?? 0) * 2, 200)}px`,
+                backgroundColor: "#10b981",
+                transition: "height 0.6s ease-out"
+              }}
+            ></div>
           </div>
         </div>
+
         <div className="chart-labels-row">
           <span>Turno Matutino (A)</span>
           <span>Turno Vespertino (B)</span>

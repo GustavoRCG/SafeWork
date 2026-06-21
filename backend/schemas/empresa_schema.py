@@ -82,3 +82,5 @@ class EmpresaResponse(BaseModel):
     class Config:
         from_attributes = True  # Garante leitura direta de objetos do SQLAlchemy
         populate_by_name = True
+
+

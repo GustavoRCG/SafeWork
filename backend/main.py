@@ -4,7 +4,7 @@ from firebase_admin import credentials
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes
+from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes, relatorios_routes
 from database import database
 from database import models  
 # Carregar variáveis de ambiente do arquivo .env
@@ -63,6 +63,8 @@ app.include_router(funcionario_routes.router)
 app.include_router(empresa_routes.router)
 app.include_router(plano_routes.router)
 app.include_router(seguranca_routes.router)
+app.include_router(relatorios_routes.router)
+
 
 # 7. Rota de Boas-vindas (Health Check)
 @app.get("/", tags=["Root"])

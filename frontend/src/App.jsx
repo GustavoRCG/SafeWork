@@ -3,14 +3,16 @@ import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
+import WelcomePage from "./pages/dashboard_inicial/dashboard_inicial";
 import Login from "./pages/login/login";
+import CadastroEmpresa from "./pages/dashboard_empresa/cadastro_empresa";
 import DashboardSeguranca from "./pages/dashboard_seguranca/dashboard_seguranca";
 import DashboardRH from "./pages/dashboard_rh/dashboard_rh";
 import DashboardAdmin from "./pages/dashboard_admin/dashboard_admin";
 import CadastroFuncionario from "./pages/dashboard_rh/cadastro_funcionario";
 
-// Import do fluxo de Onboarding da Empresa
-import CadastroEmpresa from "./pages/dashboard_empresa/cadastro_empresa";
+
+
 
 function App() {
   const [usuarioLogado, setUsuarioLogado] = useState(null);
@@ -49,22 +51,31 @@ function App() {
     return "/dashboard-seguranca";
   };
 
-  return (
+ return (
     <BrowserRouter>
       <Routes>
-        {/* 1ª TELA ABSOLUTA: Quem acessa o sistema cai direto no Onboarding da Empresa */}
-        <Route path="/" element={<CadastroEmpresa />} />
+        {/* 🚀 ROTA RAIZ INTELIGENTE: Remove o risco de telas pretas travadas por quebra de ciclo */}
+        <Route 
+          path="/" 
+          element={
+            usuarioLogado ? (
+              <Navigate to={getRedirecionamentoPadrao()} replace />
+            ) : (
+              <WelcomePage />
+            )
+          } 
+        />
+        
         <Route path="/empresa" element={<CadastroEmpresa />} />
 
-        {/* 2ª TELA: Após o checkout, o fluxo redireciona para cá para o vínculo do usuário */}
+        {/* ROTA DE LOGIN */}
         <Route
           path="/login"
           element={
             !usuarioLogado ? (
               <Login />
             ) : (
-              // 3ª TELA: Se já autenticou no Firebase, o próprio componente Login lida com a Seleção de Perfil ou joga para o Dashboard correto
-              <Navigate to={getRedirecionamentoPadrao()} />
+              <Navigate to={getRedirecionamentoPadrao()} replace />
             )
           }
         />
@@ -73,31 +84,33 @@ function App() {
         <Route
           path="/dashboard-seguranca"
           element={
-            usuarioLogado ? <DashboardSeguranca /> : <Navigate to="/login" />
+            usuarioLogado ? <DashboardSeguranca /> : <Navigate to="/login" replace />
           }
         />
 
         <Route
           path="/dashboard-rh"
-          element={usuarioLogado ? <DashboardRH /> : <Navigate to="/login" />}
+          element={
+            usuarioLogado ? <DashboardRH /> : <Navigate to="/login" replace />
+          }
         />
 
         <Route
           path="/dashboard-admin"
           element={
-            usuarioLogado ? <DashboardAdmin /> : <Navigate to="/login" />
+            usuarioLogado ? <DashboardAdmin /> : <Navigate to="/login" replace />
           }
         />
 
         <Route
           path="/cadastro-funcionario"
           element={
-            usuarioLogado ? <CadastroFuncionario /> : <Navigate to="/login" />
+            usuarioLogado ? <CadastroFuncionario /> : <Navigate to="/login" replace />
           }
         />
 
-        {/* Qualquer rota desconhecida joga de volta para o começo do Onboarding */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Qualquer rota desconhecida joga de volta para o começo */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

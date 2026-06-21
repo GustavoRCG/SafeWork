@@ -226,7 +226,7 @@ class EmpresaRepository:
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                             <tr>
                                 <td style="padding: 8px 0; color: #64748b; width: 120px;"><b>Link de Acesso:</b></td>
-                                <td style="padding: 8px 0;"><code>http://seu-sistema.safework.com/login</code></td>
+                                <td style="padding: 8px 0;"><code>http://localhost:5174/login</code></td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #64748b;"><b>E-mail de Login:</b></td>
@@ -234,12 +234,12 @@ class EmpresaRepository:
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #64748b;"><b>Senha:</b></td>
-                                <td style="padding: 8px 0; color: #334155;"><i>A senha Master definida no formulário.</i></td>
+                                <td style="padding: 8px 0; color: #334155;"><i>A senha Master definida na criação da conta.</i></td>
                             </tr>
                         </table>
 
                         <div style="text-align: center; margin-top: 30px;">
-                            <a href="http://localhost:3000/login" style="background: #dc2626; color: #ffffff; padding: 12px 30px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block; box-shadow: 0 2px 4px rgba(220,38,38,0.2);">Acessar Painel de Controle</a>
+                            <a href="http://localhost:5174/login" style="background: #dc2626; color: #ffffff; padding: 12px 30px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block; box-shadow: 0 2px 4px rgba(220,38,38,0.2);">Acessar Painel de Controle</a>
                         </div>
                     </div>
                     <div style="background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
@@ -263,3 +263,5 @@ class EmpresaRepository:
                 print(f"E-MAIL ENVIADO COM SUCESSO PARA: {email_destino}")
             except Exception as error:
                 print(f"ERRO CRÍTICO AO DISPARAR EMAIL SMTP: {str(error)}")
+    
+    

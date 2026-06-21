@@ -1,0 +1,175 @@
+/* ==========================================================================
+   📦 CONTAINER PRINCIPAL
+   ========================================================================== */
+.welcome-container {
+  min-height: 100vh; /* Corrigido de min-h-screen */
+  background-color: #0b0f19;
+  /* Iluminação radial de fundo idêntica ao login */
+  background-image: radial-gradient(
+    circle at 50% 15%,
+    rgba(30, 41, 59, 0.5) 0%,
+    transparent 50%
+  );
+  color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+}
+
+.welcome-content {
+  max-w: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Cabeçalho */
+.welcome-header {
+  margin-bottom: 48px;
+}
+
+.welcome-subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  max-w: 500px;
+  margin: 16px auto 0 auto;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   🔖 DESIGN DA LOGO OFICIAL (COM GLOW EFFECT)
+   ========================================================================== */
+.onboarding-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.brand-logo {
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 12px 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  /* Sombra azul neon idêntica às outras telas */
+  box-shadow:
+    0 0 40px 5px rgba(56, 189, 248, 0.15),
+    inset 0 0 12px rgba(56, 189, 248, 0.1);
+}
+
+.logo-red {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+.logo-white {
+  color: #ffffff;
+}
+
+.logo-sub {
+  color: #38bdf8;
+  font-size: 9px;
+  letter-spacing: 3px;
+  margin-top: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   📊 GRID DE CARDS E SELEÇÃO
+   ========================================================================== */
+.welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  max-w: 650px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  background-color: #131c30;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Ícones dos Cards */
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.welcome-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #ffffff;
+}
+
+.welcome-card p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Configurações específicas e Hovers */
+.card-login .card-icon {
+  background-color: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.card-login:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.05);
+}
+
+.card-login:hover .card-icon {
+  background-color: #38bdf8;
+  color: #0b0f19;
+}
+
+.card-empresa .card-icon {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.card-empresa:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.05);
+}
+
+.card-empresa:hover .card-icon {
+  background-color: #10b981;
+  color: #0b0f19;
+}
+
+/* Rodapé */
+.welcome-footer {
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: 64px;
+}
