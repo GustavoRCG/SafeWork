@@ -14,17 +14,27 @@ export default function CadastroEmpresa() {
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
 
-  // Dados do formulário mapeados em conformidade com o Postgres
+  // Estados dinâmicos de validação do cartão
+  const [cartaoErro, setCartaoErro] = useState("");
+  const [bandeira, setBandeira] = useState("");
+
+  // Dados do formulário mapeados em conformidade com o Postgres + Pydantic
   const [formData, setFormData] = useState({
     razao_social: "",
     cnpj: "",
+    email_contato: "",
     senha: "",
     id_plano: null,
     titular_nome: "",
     numero_mascarado: "",
+    data_expiracao: "",
+    cvv: "",
+    banco_codigo: "",
+    agencia: "",
+    conta_corrente: "",
   });
 
-  // Função para formatar e mascarar o CNPJ automaticamente
+  // MÁSCARA: Formatar e mascarar o CNPJ automaticamente
   const formatCnpj = (value) => {
     const rawValue = value.replace(/\D/g, "").slice(0, 14);
     return rawValue
@@ -32,6 +42,80 @@ export default function CadastroEmpresa() {
       .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
       .replace(/\.(\d{3})(\d)/, ".$1/$2")
       .replace(/(\d{4})(\d)/, "$1-$2");
+  };
+
+  // MÁSCARA: Formatar número do cartão (separar de 4 em 4 números)
+  const formatCartao = (value) => {
+    return value
+      .replace(/\D/g, "")
+      .slice(0, 16)
+      .replace(/(\d{4})(?=\d)/g, "$1 ");
+  };
+
+  // MÁSCARA: Formatar data de expiração (MM/AAAA) automaticamente ao digitar
+  const formatDataExpiracao = (value) => {
+    const clean = value.replace(/\D/g, "").slice(0, 6);
+    if (clean.length >= 3) {
+      return `${clean.slice(0, 2)}/${clean.slice(2, 6)}`;
+    }
+    return clean;
+  };
+
+  // 🏦 MÁSCARAS BANCÁRIAS ADICIONADAS:
+
+  // Código do Banco: apenas números, máximo de 3 dígitos
+  const formatBancoCodigo = (value) => {
+    return value.replace(/\D/g, "").slice(0, 3);
+  };
+
+  // Agência: Limita a 5 caracteres (aceita número ou dígito X comum em agências do BB)
+  const formatAgencia = (value) => {
+    return value
+      .replace(/[^0-9X-]/gi, "")
+      .toUpperCase()
+      .slice(0, 5);
+  };
+
+  // Conta Corrente: Coloca o hífen automaticamente antes do último dígito
+  const formatContaCorrente = (value) => {
+    // Remove tudo que não for número ou o caractere X/x (comum no dígito da conta)
+    const clean = value.replace(/[^0-9Xx]/g, "").slice(0, 12);
+
+    if (clean.length > 1) {
+      // Separa o último caractere para ser o dígito verificador após o "-"
+      return `${clean.slice(0, -1)}-${clean.slice(-1)}`.toUpperCase();
+    }
+    return clean.toUpperCase();
+  };
+
+  // ALGORITMO DE LUHN: Valida se o número do cartão é matematicamente válido
+  const validarAlgoritmoLuhn = (num) => {
+    let arr = String(num)
+      .replace(/\s/g, "")
+      .split("")
+      .reverse()
+      .map((x) => parseInt(x));
+    let lastDigit = arr.shift();
+    let sum = arr.reduce((acc, val, i) => {
+      if (i % 2 === 0) {
+        val = val * 2;
+        if (val > 9) val -= 9;
+      }
+      return acc + val;
+    }, 0);
+    return (sum + lastDigit) % 10 === 0;
+  };
+
+  // DETECTAR BANDEIRA: Identifica a bandeira pelos primeiros dígitos (IIN)
+  const descobrirBandeira = (num) => {
+    const clean = num.replace(/\s/g, "");
+    if (/^4/.test(clean)) return "Visa 🟦";
+    if (/^(5[1-5]|2[2-7])/.test(clean)) return "Mastercard 🟥";
+    if (/^3[47]/.test(clean)) return "Amex 🟩";
+    if (/^(6011|622|64[4-9]|65)/.test(clean)) return "Discover 🟨";
+    if (/^(5067|4576|4011)/.test(clean)) return "Elo 🟧";
+    if (!clean) return "";
+    return "Desconhecida 🌐";
   };
 
   // FUNÇÃO QUE CONSULTA O CNPJ REAL NA API
@@ -42,7 +126,6 @@ export default function CadastroEmpresa() {
       const response = await fetch(
         `https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`,
       );
-
       if (response.ok) {
         const data = await response.json();
         setFormData((prev) => ({
@@ -69,7 +152,6 @@ export default function CadastroEmpresa() {
     if (name === "cnpj") {
       const maskedCnpj = formatCnpj(value);
       const cnpjLimpo = maskedCnpj.replace(/\D/g, "");
-
       setFormData((prev) => ({ ...prev, cnpj: maskedCnpj }));
 
       if (cnpjLimpo.length === 14) {
@@ -81,6 +163,36 @@ export default function CadastroEmpresa() {
       } else {
         setCnpjErro("");
       }
+    } else if (name === "numero_mascarado") {
+      const maskedCartao = formatCartao(value);
+      setBandeira(descobrirBandeira(maskedCartao));
+      setFormData((prev) => ({ ...prev, numero_mascarado: maskedCartao }));
+
+      const cleanNum = maskedCartao.replace(/\s/g, "");
+      if (cleanNum.length === 16 && !validarAlgoritmoLuhn(cleanNum)) {
+        setCartaoErro(
+          "Número de cartão inválido (Falhou no teste de autenticidade).",
+        );
+      } else {
+        setCartaoErro("");
+      }
+    } else if (name === "data_expiracao") {
+      const maskedData = formatDataExpiracao(value);
+      setFormData((prev) => ({ ...prev, data_expiracao: maskedData }));
+    } else if (name === "cvv") {
+      const cleanCvv = value.replace(/\D/g, "").slice(0, 4);
+      setFormData((prev) => ({ ...prev, cvv: cleanCvv }));
+    }
+    // 🏦 TRATAMENTOS BANCÁRIOS INTERCEPTADOS NO HANDLE CHANGE:
+    else if (name === "banco_codigo") {
+      const maskedBanco = formatBancoCodigo(value);
+      setFormData((prev) => ({ ...prev, banco_codigo: maskedBanco }));
+    } else if (name === "agencia") {
+      const maskedAgencia = formatAgencia(value);
+      setFormData((prev) => ({ ...prev, agencia: maskedAgencia }));
+    } else if (name === "conta_corrente") {
+      const maskedConta = formatContaCorrente(value);
+      setFormData((prev) => ({ ...prev, conta_corrente: maskedConta }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -89,7 +201,6 @@ export default function CadastroEmpresa() {
   // Avaliar a força da senha
   const avaliarForcaSenha = (senha) => {
     if (!senha) return { label: "", color: "", score: 0 };
-
     let score = 0;
     if (senha.length >= 8) score += 1;
     if (/[A-Za-z]/.test(senha) && /\d/.test(senha)) score += 1;
@@ -111,7 +222,6 @@ export default function CadastroEmpresa() {
     return { label: "Forte 🔒", color: "#22c55e", score: 3 };
   };
 
-  // PASSO 1: Apenas valida os dados locais e avança na tela (Sem tocar no banco)
   const handleAvancarEtapa1 = (e) => {
     e.preventDefault();
     setSenhaErro("");
@@ -139,36 +249,98 @@ export default function CadastroEmpresa() {
     }
 
     if (cnpjErro) return;
-
-    // Tudo validado localmente, avança para os planos
     setStep(2);
   };
 
-  // PASSO 3: Envia TUDO unificado de uma vez só para o Back-end
   const handleFinalizarContratacao = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
+    if (metodoSelecionado === "Cartao") {
+      const cleanNum = formData.numero_mascarado.replace(/\s/g, "");
+      if (cleanNum.length < 16) {
+        alert("O número do cartão deve conter exatamente 16 dígitos.");
+        return;
+      }
+      if (!validarAlgoritmoLuhn(cleanNum)) {
+        alert("O número do cartão digitado é inválido. Verifique os dados.");
+        return;
+      }
+
+      if (
+        !formData.data_expiracao ||
+        !/^\d{2}\/\d{4}$/.test(formData.data_expiracao)
+      ) {
+        alert("Insira a expiração no formato correto MM/AAAA.");
+        return;
+      }
+
+      const [mes, ano] = formData.data_expiracao.split("/").map(Number);
+      const hoje = new Date();
+      const anoAtual = hoje.getFullYear();
+      const mesAtual = hoje.getMonth() + 1;
+
+      if (mes < 1 || mes > 12) {
+        alert("Mês de expiração inválido.");
+        return;
+      }
+      if (ano < anoAtual || (ano === anoAtual && mes < mesAtual)) {
+        alert("Este cartão já está expirado.");
+        return;
+      }
+
+      if (!formData.cvv || formData.cvv.length < 3) {
+        alert("Insira um código de segurança (CVV) válido.");
+        return;
+      }
+    }
+
+    if (metodoSelecionado === "Debito") {
+      if (!formData.banco_codigo || formData.banco_codigo.length !== 3) {
+        alert(
+          "O código de compensação do banco deve possuir exatamente 3 dígitos.",
+        );
+        return;
+      }
+      if (!formData.agencia || formData.agencia.length < 3) {
+        alert("Por favor, preencha uma agência válida.");
+        return;
+      }
+      if (!formData.conta_corrente || !formData.conta_corrente.includes("-")) {
+        alert(
+          "Por favor, preencha a conta corrente estruturada com o dígito verificador.",
+        );
+        return;
+      }
+    }
+
+    setLoading(true);
     const cnpjLimpo = formData.cnpj.replace(/\D/g, "");
 
-    // Monta o payload definitivo com todas as 3 fases integradas usando os aliases esperados pelo Pydantic
     const payloadCompleto = {
       razao_social: formData.razao_social,
       cnpj: cnpjLimpo,
-      senha: formData.senha, // Mapeia direto para "senha" (capturado por validation_alias no backend)
-      idPlano: formData.id_plano, // Envia em camelCase conforme configurado no schema
-      email_contato: formData.email,
-      tipoMetodo: metodoSelecionado.toUpperCase(), // Mantém consistência (PIX ou CARTAO)
-      titularNome:
-        metodoSelecionado === "Cartao" ? formData.titular_nome : "CLIENTE PIX",
+      senha: formData.senha,
+      emailContato: formData.email_contato,
+      idPlano: formData.id_plano,
+      tipoMetodo: metodoSelecionado === "Cartao" ? "CARTAO" : "DEBITO_CONTA",
+      titularNome: formData.titular_nome.toUpperCase(),
+
       numeroMascarado:
-        metodoSelecionado === "Cartao"
-          ? formData.numero_mascarado.slice(-4)
-          : "🔑 Chave Pix Copia e Cola",
+        metodoSelecionado === "Cartao" ? formData.numero_mascarado : null,
+      dataExpiracao:
+        metodoSelecionado === "Cartao" ? formData.data_expiracao : null,
+      cvv: metodoSelecionado === "Cartao" ? formData.cvv : null,
+
+      bancoCodigo:
+        metodoSelecionado === "Debito" ? formData.banco_codigo : null,
+      agencia: metodoSelecionado === "Debito" ? formData.agencia : null,
+      // Dica: Se seu backend espera a conta limpa (sem o hífen), você pode usar .replace("-", "") aqui:
+      contaCorrente:
+        metodoSelecionado === "Debito" ? formData.conta_corrente : null,
+      tokenPagamento: "TOKEN_PROVISORIO_FRONT",
     };
 
     try {
-      // Dispara a criação atômica unificada no endpoint principal de empresas
       const response = await fetch("http://localhost:8000/empresas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -181,7 +353,6 @@ export default function CadastroEmpresa() {
         alert("Onboarding concluído com sucesso! Assinatura Ativada.");
         window.location.href = "/login";
       } else {
-        // Exibe a mensagem limpa vinda do backend (ex: "Este CNPJ já está cadastrado no sistema.")
         alert(
           `Erro no Onboarding: ${data.detail || "Falha ao processar o cadastro completo."}`,
         );
@@ -202,7 +373,6 @@ export default function CadastroEmpresa() {
       </header>
 
       <main className="onboarding-main">
-        {/* 🌌 LOGOTIPO CENTRALIZADO */}
         <div className="brand-logo">
           <span className="logo-text-top">
             SAFE<span style={{ color: "#dc2626" }}>WORK</span>
@@ -210,7 +380,6 @@ export default function CadastroEmpresa() {
           <span className="logo-sub">Visão Computacional</span>
         </div>
 
-        {/* 🎯 TÍTULO DA ETAPA 1 */}
         {step === 1 && (
           <h2 className="page-title-external">
             Comece a proteger sua operação
@@ -276,6 +445,21 @@ export default function CadastroEmpresa() {
                   }
                   className="form-input"
                   disabled={loadingCnpj}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  E-mail de Contato Comercial
+                </label>
+                <input
+                  type="email"
+                  name="email_contato"
+                  value={formData.email_contato}
+                  onChange={handleChange}
+                  required
+                  placeholder="diretoria@empresa.com"
+                  className="form-input"
                 />
               </div>
 
@@ -491,7 +675,7 @@ export default function CadastroEmpresa() {
           </div>
         )}
 
-        {/* PASSO 3: MÉTODOS DE PAGAMENTO */}
+        {/* PASSO 3: MÉTODOS DE PAGAMENTO HÍBRIDOS */}
         {step === 3 && (
           <div className="onboarding-card max-w-md">
             <h2 className="payment-title-internal">Método de Pagamento</h2>
@@ -502,29 +686,29 @@ export default function CadastroEmpresa() {
             {!metodoSelecionado ? (
               <div className="payment-options">
                 <button
-                  onClick={() => setMetodoSelecionado("Pix")}
-                  className="payment-btn group-emerald"
-                >
-                  <div className="payment-text">
-                    <p className="payment-title">Pagar via PIX</p>
-                    <p className="payment-desc">
-                      Aprovação e liberação imediata
-                    </p>
-                  </div>
-                  <span className="payment-icon text-emerald">⚡</span>
-                </button>
-
-                <button
                   onClick={() => setMetodoSelecionado("Cartao")}
                   className="payment-btn group-blue"
                 >
                   <div className="payment-text">
-                    <p className="payment-title">Cartão de Crédito</p>
+                    <p className="payment-title">Cartão de Crédito/Débito</p>
                     <p className="payment-desc">
-                      Recorrência mensal direta no sistema
+                      Recorrência mensal direto na fatura
                     </p>
                   </div>
                   <span className="payment-icon">💳</span>
+                </button>
+
+                <button
+                  onClick={() => setMetodoSelecionado("Debito")}
+                  className="payment-btn group-emerald"
+                >
+                  <div className="payment-text">
+                    <p className="payment-title">Débito em Conta Bancária</p>
+                    <p className="payment-desc">
+                      Cobrança automática em conta corrente
+                    </p>
+                  </div>
+                  <span className="payment-icon text-emerald">🏦</span>
                 </button>
 
                 <button onClick={() => setStep(2)} className="btn-back">
@@ -536,30 +720,68 @@ export default function CadastroEmpresa() {
                 onSubmit={handleFinalizarContratacao}
                 className="onboarding-form"
               >
-                {metodoSelecionado === "Pix" ? (
-                  <div className="pix-checkout text-center">
-                    <div className="pix-qr-placeholder">QR CODE SIMULADO</div>
-                    <p className="text-sm text-gray-400 mt-2">
-                      Clique no botão abaixo para concluir o onboarding e gerar
-                      a chave pix.
-                    </p>
-                  </div>
-                ) : (
+                <div className="form-group">
+                  <label className="form-label">Nome Completo do Titular</label>
+                  <input
+                    type="text"
+                    name="titular_nome"
+                    required
+                    value={formData.titular_nome}
+                    onChange={handleChange}
+                    placeholder="EMPRESA BRASIL LTDA"
+                    className="form-input"
+                  />
+                </div>
+
+                {metodoSelecionado === "Debito" ? (
+                  /* 🏦 FORMULÁRIO DE DÉBITO EM CONTA REESTRUTURADO */
                   <>
                     <div className="form-group">
                       <label className="form-label">
-                        Nome do Titular (como no cartão)
+                        Código do Banco (Ex: 341 - Itaú, 001 - BB)
                       </label>
                       <input
                         type="text"
-                        name="titular_nome"
+                        name="banco_codigo"
                         required
-                        value={formData.titular_nome}
+                        value={formData.banco_codigo}
                         onChange={handleChange}
-                        placeholder="JOÃO S SILVA"
+                        placeholder="341"
                         className="form-input"
                       />
                     </div>
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Agência</label>
+                        <input
+                          type="text"
+                          name="agencia"
+                          required
+                          value={formData.agencia}
+                          onChange={handleChange}
+                          placeholder="1234"
+                          className="form-input"
+                        />
+                      </div>
+                      <div className="form-group" style={{ flex: 2 }}>
+                        <label className="form-label">
+                          Conta Corrente (com dígito)
+                        </label>
+                        <input
+                          type="text"
+                          name="conta_corrente"
+                          required
+                          value={formData.conta_corrente}
+                          onChange={handleChange}
+                          placeholder="56789-0"
+                          className="form-input"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* 💳 FORMULÁRIO DE CARTÃO DE CRÉDITO ADAPTADO */
+                  <>
                     <div className="form-group">
                       <label className="form-label">Número do Cartão</label>
                       <input
@@ -570,14 +792,66 @@ export default function CadastroEmpresa() {
                         onChange={handleChange}
                         placeholder="4444 5555 6666 7777"
                         className="form-input"
+                        style={{ borderColor: cartaoErro ? "#ef4444" : "" }}
                       />
+                      {bandeira && (
+                        <p
+                          style={{
+                            color: "#22c55e",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Bandeira identificada: {bandeira}
+                        </p>
+                      )}
+                      {cartaoErro && (
+                        <p
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          ❌ {cartaoErro}
+                        </p>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Expiração</label>
+                        <input
+                          type="text"
+                          name="data_expiracao"
+                          required
+                          value={formData.data_expiracao}
+                          onChange={handleChange}
+                          placeholder="MM/AAAA"
+                          className="form-input"
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">CVV</label>
+                        <input
+                          type="text"
+                          name="cvv"
+                          required
+                          value={formData.cvv}
+                          onChange={handleChange}
+                          placeholder="123"
+                          className="form-input"
+                        />
+                      </div>
                     </div>
                   </>
                 )}
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !!cartaoErro}
                   className="btn-primary mt-4"
                 >
                   {loading ? "Processando..." : "Confirmar e Ativar Sistema"}
@@ -597,8 +871,7 @@ export default function CadastroEmpresa() {
       </main>
 
       <footer className="onboarding-footer">
-        Acesso restrito. Todas as atividades são monitoradas. SafeWork AI © 2026
-        - Versão do Protótipo
+        Acesso restrito. SafeWork AI © 2026 - Versão do Protótipo
       </footer>
     </div>
   );

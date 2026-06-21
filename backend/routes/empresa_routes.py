@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
+import database.models
 
 from database.database import get_db, get_current_user
 from repositories.empresa_repository import EmpresaRepository
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/empresas", tags=["Empresas"], redirect_slashes=False
 @router.post("/", response_model=EmpresaResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def criar_empresa(
     empresa_in: EmpresaCreate, 
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
@@ -22,17 +24,16 @@ def criar_empresa(
     """
     repo = EmpresaRepository(db)
     controller = EmpresaController(repo)
-    
-    if repo.get_by_cnpj(empresa_in.cnpj):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Este CNPJ já está cadastrado no sistema."
-        )
         
     try:
-        return controller.cadastrar(empresa_in)
+        # O controller delega a validação de CNPJ e a criação atômica no banco + Firebase
+        return controller.cadastrar(empresa_in, background_tasks)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        # Captura mensagens como "Este CNPJ já está cadastrado no sistema."
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )
 
 @router.post("/{empresa_id}/vincular-pagamento", response_model=EmpresaResponse)
 def vincular_plano_e_pagamento(
@@ -51,9 +52,12 @@ def vincular_plano_e_pagamento(
             dados_pagamento=dados_pagamento
         )
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )
 
-@router.get("/{empresa_id}/metricas", response_model=dict) # Altere o response_model para o seu schema de métricas se houver
+@router.get("/{empresa_id}/metricas", response_model=dict)
 def obter_metricas_empresa(
     empresa_id: int,
     db: Session = Depends(get_db),
@@ -65,8 +69,14 @@ def obter_metricas_empresa(
     repo = EmpresaRepository(db)
     controller = EmpresaController(repo)
     
-    # Supondo que você crie esse método no seu controller posteriormente:
-    metricas = controller.obter_metricas(empresa_id)
-    if not metricas:
-        raise HTTPException(status_code=404, detail="Métricas não encontradas para esta empresa.")
-    return metricas
+    # Executa a busca de métricas pelo controller
+    try:
+        metricas = controller.obter_metricas(empresa_id)
+        if not metricas:
+            raise HTTPException(status_code=404, detail="Métricas não encontradas para esta empresa.")
+        return metricas
+    except AttributeError:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED, 
+            detail="Método obter_metricas ainda não foi implementado no Controller."
+        )
