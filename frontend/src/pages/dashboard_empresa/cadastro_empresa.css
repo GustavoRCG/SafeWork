@@ -1,5 +1,5 @@
 /* ==========================================================================
-   📦 CONTAINER PRINCIPAL (ONBOARDING) - MESMO PADRÃO DO LOGIN-CONTAINER
+   📦 CONTAINER PRINCIPAL (ONBOARDING) - COLA O CONTEÚDO NO TOPO
    ========================================================================== */
 .onboarding-container {
   display: flex;
@@ -18,7 +18,7 @@
     system-ui,
     -apple-system,
     sans-serif;
-  padding: 40px 20px;
+  padding: 15px 20px 40px 20px; /* Reduzido de 40px para 15px para subir tudo */
   position: relative;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -34,7 +34,7 @@
   flex-direction: column;
   align-items: center;
   z-index: 2; /* Acima das luzes de fundo */
-  margin-top: 20px;
+  margin-top: 0px; /* Zerado para eliminar o espaço em branco */
 }
 
 /* Card unificado (Passo 1 e Passo 3) */
@@ -58,12 +58,31 @@
    🔖 CABEÇALHO E BRAND LOGO (LOGOTIPO COM GLOW EFFECT)
    ========================================================================== */
 .onboarding-header {
-  text-align: center;
-  margin-bottom: 24px;
-  position: relative;
   display: flex;
-  flex-direction: column;
+  justify-content: center; /* Centraliza a logo horizontalmente */
   align-items: center;
+  width: 100%;
+  padding: 10px 0; /* Reduzido de 30px para 10px para puxar o logo para cima */
+  position: relative; /* Define a referência de posicionamento para o filho */
+}
+
+/* 🎯 TÍTULO H2 FORA DO FORMULÁRIO (ETAPA 1) */
+.page-title-external {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 20px 0; /* Margem apenas abaixo para empurrar o formulário levemente */
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+/* 📝 SUBTÍTULO INTERNO (DENTRO DO FORMULÁRIO) */
+.form-subtitle-internal {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 24px 0; /* Espaçamento inferior até o primeiro input */
+  text-align: center;
+  line-height: 1.5;
 }
 
 .brand-logo {
@@ -73,7 +92,7 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* Reduzido de 24px para 16px */
   background-color: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(8px);
   /* Sombra brilhante azulada idêntica ao logo-box */
@@ -104,13 +123,17 @@
 }
 
 .step-indicator {
+  position: absolute;
+  top: 10px; /* Alinhado ao topo com o novo padding do header */
+  right: 40px; /* Afasta da borda direita da tela */
   font-size: 12px;
   color: #38bdf8;
   background-color: rgba(56, 189, 248, 0.1);
   padding: 6px 14px;
   border-radius: 9999px;
   font-weight: 600;
-  display: inline-block;
+  white-space: nowrap;
+  margin: 0 !important;
 }
 
 /* Títulos internos dos Cards */
@@ -176,7 +199,7 @@
 }
 
 /* ==========================================================================
-   🔒 🆕 SEÇÃO: VALIDAÇÕES, ALERTA DE ERRO E FORÇA DA SENHA
+   🔒 SEÇÃO: VALIDAÇÕES, ALERTA DE ERRO E FORÇA DA SENHA
    ========================================================================== */
 .error-message {
   color: #ef4444;
@@ -213,7 +236,7 @@
 .password-strength-bars {
   display: flex;
   gap: 4px;
-  margintop: 4px;
+  margin-top: 4px;
 }
 
 .password-bar {
@@ -475,7 +498,7 @@
   text-align: center;
   font-size: 13px;
   color: #475569;
-  margin-top: 64px;
+  margin-top: 40px; /* Reduzido de 64px para aproximar mais da base sem empurrar */
   z-index: 2;
 }
 
@@ -489,17 +512,25 @@
     max-width: 90%;
   }
   .plans-grid {
-    gap: 16px; /* Diminui o espaçamento dos planos para caber em tablets */
+    gap: 16px;
   }
   .plan-card {
-    padding: 32px 24px; /* Reduz levemente o padding interno dos cards */
+    padding: 32px 24px;
   }
 }
 
 /* 📱 CELULARES E DISPOSITIVOS PEQUENOS (Até 768px) */
 @media (max-width: 768px) {
   .onboarding-container {
-    padding: 20px 12px; /* Diminui a margem externa para aproveitar a tela do celular */
+    position: relative;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Mudado de center para flex-start para parar de centralizar e criar vácuos */
+    padding-top: 20px; /* Corrigido de 100px para 20px */
+    box-sizing: border-box;
   }
 
   .onboarding-main {
@@ -507,28 +538,31 @@
   }
 
   .plans-grid {
-    grid-template-columns: 1fr; /* Transforma a grade de planos em uma coluna única */
+    grid-template-columns: 1fr;
     gap: 20px;
   }
 
   .onboarding-card {
-    padding: 28px 20px; /* Deixa o formulário interno menos apertado no celular */
-    max-width: 100%; /* Garante que o card ocupe a largura total disponível */
+    padding: 28px 20px;
+    max-width: 100%;
   }
 
   .card-title {
-    font-size: 22px; /* Reduz o tamanho do título para não quebrar muitas linhas */
+    font-size: 22px;
   }
 
   .brand-logo {
-    padding: 10px 20px; /* Reduz o tamanho do box do logo no topo */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 }
 
 /* Estilização do ícone do olho */
 .eye-icon {
   font-size: 18px;
-  color: #64748b; /* Cor cinza/azulada discreta padrão */
+  color: #64748b;
   transition:
     color 0.2s ease,
     transform 0.2s ease;
@@ -537,6 +571,6 @@
 
 /* Quando passar o mouse no botão, o olho acende no azul do seu layout */
 .btn-toggle-password:hover .eye-icon {
-  color: #38bdf8; /* Azul neon idêntico ao logo-sub e focos */
-  transform: scale(1.1); /* Um leve efeito de zoom ao passar o mouse */
+  color: #38bdf8;
+  transform: scale(1.1);
 }

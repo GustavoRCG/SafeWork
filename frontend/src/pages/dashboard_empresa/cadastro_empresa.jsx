@@ -3,7 +3,6 @@ import "./cadastro_empresa.css";
 
 export default function CadastroEmpresa() {
   const [step, setStep] = useState(1);
-  const [idEmpresaCriada, setIdEmpresaCriada] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [metodoSelecionado, setMetodoSelecionado] = useState("");
@@ -112,8 +111,8 @@ export default function CadastroEmpresa() {
     return { label: "Forte 🔒", color: "#22c55e", score: 3 };
   };
 
-  // PASSO 1: Criar empresa e senha master no banco
-  const handleCadastroEmpresa = async (e) => {
+  // PASSO 1: Apenas valida os dados locais e avança na tela (Sem tocar no banco)
+  const handleAvancarEtapa1 = (e) => {
     e.preventDefault();
     setSenhaErro("");
 
@@ -123,7 +122,6 @@ export default function CadastroEmpresa() {
       return;
     }
 
-    // Validação de segurança da senha
     if (
       formData.senha.length < 8 ||
       !/[A-Za-z]/.test(formData.senha) ||
@@ -135,72 +133,61 @@ export default function CadastroEmpresa() {
       return;
     }
 
-    // ✅ VALIDAÇÃO CORRIGIDA: Comparação direta e limpa de strings
     if (formData.senha.trim() !== confirmarSenha.trim()) {
       setSenhaErro("As senhas não coincidem!");
       return;
     }
 
+    if (cnpjErro) return;
+
+    // Tudo validado localmente, avança para os planos
+    setStep(2);
+  };
+
+  // PASSO 3: Envia TUDO unificado de uma vez só para o Back-end
+  const handleFinalizarContratacao = async (e) => {
+    e.preventDefault();
     setLoading(true);
+
+    const cnpjLimpo = formData.cnpj.replace(/\D/g, "");
+
+    // Monta o payload definitivo com todas as 3 fases integradas usando os aliases esperados pelo Pydantic
+    const payloadCompleto = {
+      razao_social: formData.razao_social,
+      cnpj: cnpjLimpo,
+      senha: formData.senha, // Mapeia direto para "senha" (capturado por validation_alias no backend)
+      idPlano: formData.id_plano, // Envia em camelCase conforme configurado no schema
+      email_contato: formData.email,
+      tipoMetodo: metodoSelecionado.toUpperCase(), // Mantém consistência (PIX ou CARTAO)
+      titularNome:
+        metodoSelecionado === "Cartao" ? formData.titular_nome : "CLIENTE PIX",
+      numeroMascarado:
+        metodoSelecionado === "Cartao"
+          ? formData.numero_mascarado.slice(-4)
+          : "🔑 Chave Pix Copia e Cola",
+    };
+
     try {
+      // Dispara a criação atômica unificada no endpoint principal de empresas
       const response = await fetch("http://localhost:8000/empresas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          razao_social: formData.razao_social,
-          cnpj: cnpjLimpo,
-          senha: formData.senha,
-        }),
+        body: JSON.stringify(payloadCompleto),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setIdEmpresaCriada(data.id_empresa);
-        setStep(2);
+        alert("Onboarding concluído com sucesso! Assinatura Ativada.");
+        window.location.href = "/login";
       } else {
-        alert(`Erro: ${data.detail || "Falha ao cadastrar empresa."}`);
+        // Exibe a mensagem limpa vinda do backend (ex: "Este CNPJ já está cadastrado no sistema.")
+        alert(
+          `Erro no Onboarding: ${data.detail || "Falha ao processar o cadastro completo."}`,
+        );
       }
     } catch (err) {
       alert("Não foi possível conectar ao servidor backend.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // PASSO 3: Salvar o plano e o método de pagamento no banco
-  const handleFinalizarContratacao = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:8000/empresas/${idEmpresaCriada}/vincular-pagamento`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id_plano: formData.id_plano,
-            tipo_metodo: metodoSelecionado,
-            titular_nome:
-              metodoSelecionado === "Cartao"
-                ? formData.titular_nome
-                : "CLIENTE PIX",
-            numero_mascarado:
-              metodoSelecionado === "Cartao"
-                ? formData.numero_mascarado.slice(-4)
-                : "PIX",
-          }),
-        },
-      );
-
-      if (response.ok) {
-        alert("Assinatura Ativada com Sucesso!");
-        window.location.href = "/login";
-      } else {
-        alert("Houve um problema ao processar seu pagamento.");
-      }
-    } catch (err) {
-      alert("Erro ao conectar com o servidor.");
     } finally {
       setLoading(false);
     }
@@ -211,25 +198,33 @@ export default function CadastroEmpresa() {
   return (
     <div className="onboarding-container">
       <header className="onboarding-header">
+        <div className="step-indicator">Etapa {step} de 3</div>
+      </header>
+
+      <main className="onboarding-main">
+        {/* 🌌 LOGOTIPO CENTRALIZADO */}
         <div className="brand-logo">
           <span className="logo-text-top">
             SAFE<span style={{ color: "#dc2626" }}>WORK</span>
           </span>
           <span className="logo-sub">Visão Computacional</span>
         </div>
-        <div className="step-indicator">Etapa {step} de 3</div>
-      </header>
 
-      <main className="onboarding-main">
-        {/* PASSO 1: DADOS DA EMPRESA E SENHA MASTER */}
+        {/* 🎯 TÍTULO DA ETAPA 1 */}
+        {step === 1 && (
+          <h2 className="page-title-external">
+            Comece a proteger sua operação
+          </h2>
+        )}
+
+        {/* 📦 PASSO 1: CADASTRO DA EMPRESA */}
         {step === 1 && (
           <div className="onboarding-card">
-            <h2 className="card-title">Comece a proteger sua operação</h2>
-            <p className="card-subtitle">
+            <p className="form-subtitle-internal">
               Insira os dados cadastrais e defina uma senha de acesso master.
             </p>
 
-            <form onSubmit={handleCadastroEmpresa} className="onboarding-form">
+            <form onSubmit={handleAvancarEtapa1} className="onboarding-form">
               <div className="form-group">
                 <label className="form-label">CNPJ</label>
                 <input
@@ -284,7 +279,6 @@ export default function CadastroEmpresa() {
                 />
               </div>
 
-              {/* 🔑 SENHA MASTER */}
               <div className="form-group">
                 <label className="form-label">Senha Master de Acesso</label>
                 <div
@@ -315,7 +309,6 @@ export default function CadastroEmpresa() {
                       cursor: "pointer",
                       fontSize: "16px",
                       color: "#94a3b8",
-                      userSelect: "none",
                     }}
                   >
                     {verSenha ? "✕" : "👁"}
@@ -374,7 +367,6 @@ export default function CadastroEmpresa() {
                 )}
               </div>
 
-              {/* 🔄 CONFIRMAÇÃO DE SENHA */}
               <div className="form-group">
                 <label className="form-label">Confirme a Senha Master</label>
                 <div
@@ -405,7 +397,6 @@ export default function CadastroEmpresa() {
                       cursor: "pointer",
                       fontSize: "16px",
                       color: "#94a3b8",
-                      userSelect: "none",
                     }}
                   >
                     {verConfirmarSenha ? "✕" : "👁"}
@@ -413,7 +404,6 @@ export default function CadastroEmpresa() {
                 </div>
               </div>
 
-              {/* Erros Globais */}
               {senhaErro && (
                 <p
                   style={{
@@ -431,10 +421,10 @@ export default function CadastroEmpresa() {
 
               <button
                 type="submit"
-                disabled={loading || loadingCnpj}
+                disabled={loadingCnpj}
                 className="btn-primary"
               >
-                {loading ? "Processando..." : "Avançar para Escolha do Plano"}
+                Avançar para Escolha do Plano
               </button>
             </form>
           </div>
@@ -443,11 +433,7 @@ export default function CadastroEmpresa() {
         {/* PASSO 2: SELEÇÃO DE PLANO */}
         {step === 2 && (
           <div className="plans-container">
-            <h2 className="card-title text-center">Selecione o plano ideal</h2>
-            <p className="card-subtitle text-center">
-              Liberte o poder da IA para mitigar riscos operacionais.
-            </p>
-
+            <h2 className="plan-title-internal">Selecione o plano ideal</h2>
             <div className="plans-grid">
               <div className="plan-card recommended">
                 <span className="badge">RECOMENDADO</span>
@@ -508,10 +494,9 @@ export default function CadastroEmpresa() {
         {/* PASSO 3: MÉTODOS DE PAGAMENTO */}
         {step === 3 && (
           <div className="onboarding-card max-w-md">
-            <h2 className="card-title">Método de Pagamento</h2>
-            <p className="card-subtitle">
-              Sua assinatura será vinculada à empresa{" "}
-              <span className="highlight-id">#{idEmpresaCriada}</span>
+            <h2 className="payment-title-internal">Método de Pagamento</h2>
+            <p className="payment-subtitle-internal">
+              Sua assinatura será vinculada após a confirmação final.
             </p>
 
             {!metodoSelecionado ? (
@@ -555,8 +540,8 @@ export default function CadastroEmpresa() {
                   <div className="pix-checkout text-center">
                     <div className="pix-qr-placeholder">QR CODE SIMULADO</div>
                     <p className="text-sm text-gray-400 mt-2">
-                      Clique no botão abaixo para simular a confirmação do Pix
-                      pela API.
+                      Clique no botão abaixo para concluir o onboarding e gerar
+                      a chave pix.
                     </p>
                   </div>
                 ) : (
