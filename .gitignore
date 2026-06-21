@@ -26,7 +26,11 @@ dist-ssr
 
 
 backend/*.json
+.env
+.env.*.local    
 
 # Python cache
 __pycache__/
 *.pyc
+
+**/safework-bc1aa-firebase-adminsdk-fbsvc-749b8958de.json

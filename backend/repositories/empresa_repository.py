@@ -1,6 +1,12 @@
+import os  
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from sqlalchemy.orm import Session
 from database import models
-from firebase_admin import auth  
+from firebase_admin import auth 
+from fastapi import BackgroundTasks
+
 
 class EmpresaRepository:
     def __init__(self, db: Session):
@@ -15,7 +21,7 @@ class EmpresaRepository:
     def get_all(self):
         return self.db.query(models.Empresa).all()
 
-    def create_empresa(self, dados_completos):
+    def create_empresa(self, dados_completos,background_tasks=None):
         """
         Método unificado acionado pelo Controller na última fase do Onboarding.
         Guarda tudo no Firebase e no Banco em uma única transação atômica.
@@ -67,29 +73,30 @@ class EmpresaRepository:
             self.db.flush()  # Captura o id_empresa gerado pelo serial do Postgres
 
             # --- FASE 3: MÉTODO DE PAGAMENTO HÍBRIDO (CARTÃO OU DÉBITO EM CONTA) ---
-            tipo_metodo = str(dados.get("tipo_metodo") or dados.get("tipoMetodo") or "CARTAO").upper()
-            titular_nome = str(dados.get("titular_nome") or dados.get("titularNome") or "TITULAR").upper()
+            tipo_metodo = str(dados.get("tipo_metodo") or dados.get("tipoMetodo") or "CARTAO").upper()[:20]
+            titular_nome = str(dados.get("titular_nome") or dados.get("titularNome") or "TITULAR").upper()[:100]
 
             novo_metodo = models.MetodoPagamento(
                 id_empresa=db_empresa.id_empresa,
                 tipo_metodo=tipo_metodo,
                 titular_nome=titular_nome,
-                token_pagamento=dados.get("token_pagamento", "TOKEN_PROVISORIO_API"),
+                token_pagamento=dados.get("token_pagamento", "TOKEN_PROVISORIO_API")[:20],
                 padrao=True
             )
 
             # Define as propriedades com base na escolha de pagamento
             if "CONTA" in tipo_metodo or "DEBITO" in tipo_metodo:
                 novo_metodo.tipo_metodo = "DEBITO_CONTA"
-                novo_metodo.banco_codigo = dados.get("banco_codigo") or dados.get("bancoCodigo") or "341"
-                novo_metodo.agencia = dados.get("agencia") or "0001"
-                novo_metodo.conta_corrente = dados.get("conta_corrente") or dados.get("contaCorrente") or "00000-0"
+                novo_metodo.banco_codigo = str(dados.get("banco_codigo") or dados.get("bancoCodigo") or "341")[:10]
+                novo_metodo.agencia = str(dados.get("agencia") or "0001")[:10]
+                conta_corrente_limpa = str(dados.get("conta_corrente") or dados.get("contaCorrente") or "00000-0").strip()
                 # Fallback de texto descritivo simples caso necessite ler no padrão antigo
-                novo_metodo.numero_mascarado = f"AG: {novo_metodo.agencia} / CC: {novo_metodo.conta_corrente}"
+                novo_metodo.numero_mascarado = conta_corrente_limpa[:20]
+                novo_metodo.numero_mascarado = f"{novo_metodo.agencia}/{novo_metodo.conta_corrente}"[:20]
             else:
                 novo_metodo.tipo_metodo = "CARTAO"
-                novo_metodo.numero_mascarado = dados.get("numero_mascarado") or dados.get("numeroMascarado") or "XXXX-XXXX-XXXX-0000"
-                novo_metodo.data_expiracao = dados.get("data_expiracao") or dados.get("dataExpiracao") or "12/2030"
+                novo_metodo.numero_mascarado = str(dados.get("numero_mascarado") or dados.get("numeroMascarado") or "XXXX-XXXX-XXXX-0000")[:20]
+                novo_metodo.data_expiracao = str(dados.get("data_expiracao") or dados.get("dataExpiracao") or "12/2030")[:10]
 
             self.db.add(novo_metodo)
             
@@ -148,10 +155,15 @@ class EmpresaRepository:
 
             if "CONTA" in tipo_metodo or "DEBITO" in tipo_metodo:
                 novo_metodo.tipo_metodo = "DEBITO_CONTA"
-                novo_metodo.banco_codigo = dados.get("banco_codigo") or dados.get("bancoCodigo") or "341"
-                novo_metodo.agencia = dados.get("agencia") or "0001"
-                novo_metodo.conta_corrente = dados.get("conta_corrente") or dados.get("contaCorrente") or "00000-0"
-                novo_metodo.numero_mascarado = f"AG: {novo_metodo.agencia} / CC: {novo_metodo.conta_corrente}"
+                novo_metodo.banco_codigo = str(dados.get("banco_codigo") or dados.get("bancoCodigo") or "341")[:10]
+                novo_metodo.agencia = str(dados.get("agencia") or "0001")[:10]
+                
+                # Captura a conta corrente do formulário
+                conta_crua = str(dados.get("conta_corrente") or dados.get("contaCorrente") or "00000-0")
+                novo_metodo.conta_corrente = conta_crua[:20] # Força o limite máximo do campo no BD
+                
+                # Trunca o número mascarado de forma segura para não passar de 20 caracteres
+                novo_metodo.numero_mascarado = f"{novo_metodo.agencia}/{novo_metodo.conta_corrente}"[:20]
             else:
                 novo_metodo.tipo_metodo = "CARTAO"
                 novo_metodo.numero_mascarado = dados.get("numero_mascarado") or dados.get("numeroMascarado") or "XXXX-XXXX-XXXX-0000"
