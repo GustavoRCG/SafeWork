@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./cadastro_empresa.css";
+import logoSafeWork from "../../assets/logoSafeWork.jpeg"; 
 
 export default function CadastroEmpresa() {
   const [step, setStep] = useState(1);
@@ -373,11 +374,18 @@ export default function CadastroEmpresa() {
       </header>
 
       <main className="onboarding-main">
-        <div className="brand-logo">
-          <span className="logo-text-top">
-            SAFE<span style={{ color: "#dc2626" }}>WORK</span>
-          </span>
-          <span className="logo-sub">Visão Computacional</span>
+        {/* 🖼️ Bloco da Logo Atualizado para Imagem Oficial */}
+        <div className="brand-logo" style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+          <img
+            src={logoSafeWork}
+            alt="SafeWork Visão Computacional"
+            style={{
+              width: "auto",
+              maxHeight: "65px", // Altura padrão idêntica à do login para manter a identidade visual
+              objectFit: "contain",
+              borderRadius: "4px",
+            }}
+          />
         </div>
 
         {step === 1 && (

@@ -64,12 +64,23 @@ def obter_metricas_empresa(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Retorna as métricas e dados estatísticos de uma empresa específica.
+    Retorna as métricas e dados estatísticos de uma empresa específica,
+    garantindo o isolamento de dados (Multi-tenancy).
     """
+    # 🚨 CORREÇÃO CRÍTICA DE SEGURANÇA:
+    # Verifica se a empresa_id do token condiz com o ID que ele está tentando acessar.
+    # Nota: Adapte 'empresa_id' abaixo para a chave exata que o get_current_user injeta no dict.
+    user_empresa_id = current_user.get("empresa_id")
+    
+    if user_empresa_id != empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado. Você não tem permissão para visualizar dados de outra empresa."
+        )
+
     repo = EmpresaRepository(db)
     controller = EmpresaController(repo)
     
-    # Executa a busca de métricas pelo controller
     try:
         metricas = controller.obter_metricas(empresa_id)
         if not metricas:

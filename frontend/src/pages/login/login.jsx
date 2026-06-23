@@ -13,6 +13,7 @@ import {
 import { auth } from "../../firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import "./Login.css";
+import logoSafeWork from "../../assets/logoSafeWork.jpeg";
 
 function Login() {
   const navigate = useNavigate();
@@ -51,14 +52,23 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        {/* Cabeçalho igual ao Print */}
+        {/* Cabeçalho igual ao Print com a Logo Oficial */}
         <div className="login-header">
-          <div className="logo-box">
-            <span className="logo-text-top">
-              SAFE<span style={{ color: "#dc2626" }}>WORK</span>
-            </span>
-            <span className="logo-text-bottom">VISÃO COMPUTACIONAL</span>
+          
+          {/* 🖼️ Bloco da Logo Atualizado para Imagem */}
+          <div className="logo-box" style={{ display: "flex", justifyContent: "center", marginBottom: "15px" }}>
+            <img
+              src={logoSafeWork}
+              alt="SafeWork Visão Computacional"
+              style={{
+                width: "auto",
+                maxHeight: "65px", // Altura ideal para o topo do card de login
+                objectFit: "contain",
+                borderRadius: "4px",
+              }}
+            />
           </div>
+
           <h1 className="login-title">Selecione seu Perfil de Acesso</h1>
           <p className="login-subtitle">
             Escolha o tipo de acesso para entrar no sistema SafeWork.

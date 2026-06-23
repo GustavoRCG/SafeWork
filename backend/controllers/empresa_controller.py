@@ -13,8 +13,6 @@ class EmpresaController:
         para o repositório fazer a criação atômica.
         """
         try:
-            # A checagem do CNPJ duplicado agora roda dentro do escopo da transação 
-            # do Repository para evitar conflitos de concorrência com o Firebase.
             return self.empresa_repository.create_empresa(empresa_in, background_tasks)
         except Exception as e:
             raise Exception(f"Erro ao processar criação da empresa: {str(e)}")
@@ -41,3 +39,15 @@ class EmpresaController:
         Retorna a listagem de todas as empresas cadastradas no sistema (Área Administrativa).
         """
         return self.empresa_repository.get_all()
+
+    # 🚀 ADICIONE ESTE MÉTODO ABAIXO PARA O SEU TCC:
+    def obter_metricas(self, empresa_id: int):
+        """
+        Camada de Controle: Aciona o repositório para buscar as estatísticas da empresa 
+        especificada, aplicando a regra de isolamento de dados do SafeWork.
+        """
+        try:
+            # Delega a busca filtrada e segura diretamente para o repository
+            return self.empresa_repository.obter_metricas(empresa_id)
+        except Exception as e:
+            raise Exception(f"Erro no controller ao buscar métricas: {str(e)}")

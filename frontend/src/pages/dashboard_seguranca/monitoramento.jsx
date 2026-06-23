@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Shield, Users, AlertTriangle, Zap, Loader2 } from "lucide-react";
+import { auth } from "../../firebaseConfig"; // 💡 IMPORTANTE: Importamos o objeto auth do Firebase para pegar o token atualizado
 import api from "../../services/api"; // Instância centralizada do Axios
 import "./monitoramento.css";
 
@@ -24,30 +25,50 @@ function MonitoramentoAoVivo() {
     );
 
     const atualizarDadosPainel = async () => {
-      try {
-        console.log("Buscando métricas e eventos no backend...");
+  try {
+    console.log("Buscando métricas e eventos no backend com FETCH nativo...");
 
-        // Chamada explícita e direta usando caminhos relativos à baseURL (http://localhost:8000)
-        const [resMetricas, resEventos] = await Promise.all([
-          api.get("/api/monitoramento/metricas"),
-          api.get("/api/monitoramento/eventos"),
-        ]);
+    // 1️⃣ Força a captura do Token
+    const user = auth.currentUser;
+    let token = user ? await user.getIdToken() : localStorage.getItem("token_firebase");
 
-        console.log("Métricas recebidas com sucesso:", resMetricas.data);
-        console.log("Eventos recebidos com sucesso:", resEventos.data);
+    console.log("TOKEN CAPTURADO PELO FRONTEND:", token); // 🚩 OLHE ISSO NO CONSOLE!
 
-        // Atualiza os estados do React com os dados reais obtidos do PostgreSQL
-        setMetricas(resMetricas.data);
-        setEventos(resEventos.data);
+    if (!token) {
+      console.error("ERRO: Nenhum token foi encontrado no Firebase e nem no LocalStorage.");
+      return;
+    }
 
-        // Ativa o feed de vídeo mudando o estado para true
-        setStreamOnline(true);
-      } catch (err) {
-        console.error("Erro crítico na sincronização do painel:", err);
-        // Mantém falso para exibir o loading amigável se o backend falhar
-        setStreamOnline(false);
-      }
+    // 2️⃣ Dispara usando FETCH nativo (elimina qualquer bug da instância do Axios)
+    const headers = {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
     };
+
+    const [resMetricas, resEventos] = await Promise.all([
+      fetch("http://localhost:8000/api/monitoramento/metricas", { method: "GET", headers }),
+      fetch("http://localhost:8000/api/monitoramento/eventos", { method: "GET", headers })
+    ]);
+
+    // Se o backend der 401 aqui, o erro é 100% no Python (get_current_user)
+    if (resMetricas.status === 401 || resEventos.status === 401) {
+      console.error("O Backend recusou o token do Firebase com 401 mesmo via Fetch nativo!");
+      return;
+    }
+
+    const dataMetricas = await resMetricas.json();
+    const dataEventos = await resEventos.json();
+
+    console.log("Dados do Fetch recebidos com sucesso!");
+    setMetricas(dataMetricas);
+    setEventos(dataEventos);
+    setStreamOnline(true);
+
+  } catch (err) {
+    console.error("Erro crítico na sincronização do painel:", err);
+    setStreamOnline(false);
+  }
+};
 
     // Executa a primeira carga imediatamente ao abrir o ecrã
     atualizarDadosPainel();

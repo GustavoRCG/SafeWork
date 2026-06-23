@@ -4,7 +4,8 @@ from typing import Optional
 
 # Dados que o Frontend/React vai enviar no POST
 class FuncionarioCreate(BaseModel):
-    id_empresa: int = Field(..., description="ID da empresa")
+    # Deixamos como opcional para o Backend conseguir injetar o ID do Token sem dar erro 422 no FastAPI
+    id_empresa: Optional[int] = Field(None, description="ID da empresa vinculado pelo token")
     nome: str = Field(..., max_length=100, description="Nome completo")
     cpf: str = Field(..., max_length=14, description="CPF do funcionário")
     cargo: Optional[str] = Field(None, max_length=50, description="Cargo do funcionário")

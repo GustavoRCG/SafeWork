@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes, relatorios_routes
 from database import database
-from database import models  
-# Carregar variáveis de ambiente do arquivo .env
+from database import models 
+
+# 1. Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
 # 2. Configuração do Caminho da Chave Firebase
@@ -49,22 +50,32 @@ async def ativar_yolo():
     app.state.cadastro_rh_ativo = False
     return {"status": "YOLO reativado. Monitoramento de EPI online."}
 
-# 5. Configuração de CORS (Libera acesso para o Frontend React/Vue/Mobile)
+# =========================================================================
+# 5. Configuração de CORS (Libera acesso para o Frontend React/Vite)
+# =========================================================================
+# 💡 CORREÇÃO CRÍTICA: Para requisições seguras que enviam cabeçalhos de 
+# autenticação personalizados (Bearer Token do Firebase), os navegadores modernos 
+# rejeitam o uso de "*". Precisamos listar explicitamente as origens locais do React.
+origins = [
+    "http://localhost:5173",    # URL padrão de desenvolvimento do Vite
+    "http://127.0.0.1:5173",   # IP local alternativo
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,       # Permite requisições estritamente vindas do teu Frontend Vite
+    allow_credentials=True,      # Permite o compartilhamento seguro de credenciais/tokens
+    allow_methods=["*"],         # Libera todos os métodos HTTP (GET, POST, PUT, DELETE, OPTIONS)
+    allow_headers=["*"],         # Libera todos os cabeçalhos (incluindo Authorization)
 )
 
+# 6. Inclusão das Rotas Modulares do Sistema
 app.include_router(auth_routes.router)
 app.include_router(funcionario_routes.router) 
 app.include_router(empresa_routes.router)
 app.include_router(plano_routes.router)
 app.include_router(seguranca_routes.router)
 app.include_router(relatorios_routes.router)
-
 
 # 7. Rota de Boas-vindas (Health Check)
 @app.get("/", tags=["Root"])

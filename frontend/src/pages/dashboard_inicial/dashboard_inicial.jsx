@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './dashboard_inicial.css'; 
+import logoSafeWork from "../../assets/logoSafeWork.jpeg"; // Importa a logo para usar no cabeçalho
 
 export default function WelcomePage() {
   const navigate = useNavigate();
@@ -12,13 +13,37 @@ export default function WelcomePage() {
         {/* Cabeçalho com a Logo Oficial da Marca */}
         <div className="welcome-header">
           <div className="onboarding-header">
-            <div className="brand-logo">
-              <h1 className="logo-red">
-                 SAFE<span style={{ color: "#dc2626" }}>WORK</span>
-              </h1>
-              <span className="logo-sub">SISTEMA DE MONITORAMENTO</span>
+            
+            {/* 🖼️ Bloco da Logo Atualizado para Imagem Oficial */}
+            <div 
+              className="brand-logo" 
+              style={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                marginBottom: "15px",
+                gap: "8px"
+              }}
+            >
+              <img
+                src={logoSafeWork}
+                alt="SafeWork Visão Computacional"
+                style={{
+                  width: "auto",
+                  maxHeight: "75px", // Altura em destaque ideal para a tela de boas-vindas
+                  objectFit: "contain",
+                  borderRadius: "4px",
+                }}
+              />
+              <span className="logo-sub" style={{ letterSpacing: "1px", fontSize: "0.85rem", opacity: 0.8 }}>
+                SISTEMA DE MONITORAMENTO
+              </span>
             </div>
+
           </div>
+          
+          {/* Mantido o seu texto original perfeitamente posicionado abaixo da imagem */}
           <p className="welcome-subtitle">
             Visão computacional e inteligência artificial aplicadas à gestão de segurança e monitoramento de EPIs.
           </p>

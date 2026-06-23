@@ -149,9 +149,6 @@ html,
   cursor: pointer;
   transition: background-color 0.2s;
 }
-.btn-add-dispositivo:hover {
-  background-color: #dc2626;
-}
 
 .cameras-table-wrapper {
   background-color: #111827;

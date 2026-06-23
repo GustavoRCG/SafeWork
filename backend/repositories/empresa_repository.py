@@ -177,6 +177,54 @@ class EmpresaRepository:
             self.db.rollback()
             raise Exception(str(e))
 
+    def obter_metricas(self, empresa_id: int) -> dict:
+        """
+        Retorna as métricas e estatísticas cruciais filtradas por empresa (Multi-tenancy),
+        alimentando o painel de forma segura contra vazamento de dados.
+        """
+        try:
+            # 1. Valida se a empresa realmente existe no sistema
+            empresa = self.get_by_id(empresa_id)
+            if not empresa:
+                raise Exception("Empresa não localizada.")
+
+            # 2. Busca e faz o agrupamento estrito no Banco de Dados.
+            # Certifique-se de que os nomes dos modelos (Ocorrencia, Colaborador) condizem com database.models
+            total_ocorrencias = (
+                self.db.query(models.Ocorrencia)
+                .filter(models.Ocorrencia.id_empresa == empresa_id) # Atenção se o nome da FK no banco é id_empresa ou empresa_id
+                .count()
+            )
+
+            total_colaboradores = (
+                self.db.query(models.Colaborador)
+                .filter(models.Colaborador.id_empresa == empresa_id)
+                .count()
+            )
+
+            # Exemplo de métrica de EPIs incorretos detectados pela Visão Computacional
+            alertas_pendentes = (
+                self.db.query(models.Alerta)
+                .filter(models.Alerta.id_empresa == empresa_id, models.Alerta.status == "pendente")
+                .count()
+            )
+
+            # Monta o payload de retorno esperado pelo front-end do painel administrativo
+            return {
+                "id_empresa": empresa.id_empresa,
+                "razao_social": empresa.razao_social,
+                "status_assinatura": empresa.status_assinatura,
+                "metricas": {
+                    "total_ocorrencias": total_ocorrencias,
+                    "total_colaboradores": total_colaboradores,
+                    "alertas_pendentes": alertas_pendentes
+                }
+            }
+
+        except Exception as e:
+            print(f"ERRO AO GERAR MÉTRICAS NO REPOSITORY: {str(e)}")
+            raise Exception(f"Falha ao consolidar métricas da empresa: {str(e)}")
+
     def enviar_email_boas_vindas(self, email_destino, razao_social, email_admin, plano_id, tipo_pagamento="CARTAO"):
             """
             Envia o e-mail real utilizando SMTP autenticado com design em HTML.

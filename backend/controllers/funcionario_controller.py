@@ -6,16 +6,29 @@ class FuncionarioController:
         # Recebe a conexão ativa com o banco PostgreSQL (Injeção de Dependência)
         self.db_connection = db_connection
 
-    def get_by_cpf(self, cpf: str):
-        """Busca um funcionário pelo CPF para a validação do Controller"""
-        query = """
-            SELECT id_funcionario, id_empresa, nome, cpf, cargo, face_encoding, data_admissao 
-            FROM public.funcionarios 
-            WHERE cpf = %s;
+    def get_by_cpf(self, cpf: str, id_empresa: int = None):
         """
+        Busca um funcionário pelo CPF. 
+        Se passarmos o id_empresa, valida estritamente dentro da empresa do usuário.
+        """
+        if id_empresa:
+            query = """
+                SELECT id_funcionario, id_empresa, nome, cpf, cargo, face_encoding, data_admissao 
+                FROM public.funcionarios 
+                WHERE cpf = %s AND id_empresa = %s;
+            """
+            parametros = (cpf, id_empresa)
+        else:
+            query = """
+                SELECT id_funcionario, id_empresa, nome, cpf, cargo, face_encoding, data_admissao 
+                FROM public.funcionarios 
+                WHERE cpf = %s;
+            """
+            parametros = (cpf,)
+
         try:
             with self.db_connection.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, (cpf,))
+                cursor.execute(query, parametros)
                 resultado = cursor.fetchone()
                 return resultado # Retorna o dicionário ou None se não achar
         except Exception as e:
@@ -62,7 +75,7 @@ class FuncionarioController:
     def get_by_empresa(self, id_empresa: int):
         """Lista todos os funcionários de uma empresa específica para o painel do RH"""
         query = """
-            SELECT id_funcionario, nome, cpf, cargo, data_admissao 
+            SELECT id_funcionario, id_empresa, nome, cpf, cargo, data_admissao 
             FROM public.funcionarios 
             WHERE id_empresa = %s 
             ORDER BY nome ASC;

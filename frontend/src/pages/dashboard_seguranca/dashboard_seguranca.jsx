@@ -4,6 +4,8 @@ import "./dashboard_seguranca.css";
 import MonitoramentoAoVivo from "./monitoramento";
 // Importação da sua instância centralizada do Axios
 import api from "../../services/api";
+// Importação do Auth do Firebase para coletar os tokens dinamicamente
+import { auth } from "../../firebaseConfig"; 
 
 // ==========================================
 // COMPONENTE: HISTÓRICO DE ALERTAS (POSTGRESQL VIA AXIOS)
@@ -14,11 +16,18 @@ function HistoricoAlertas() {
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
-    const buscarAlertasDoPostgres = async () => {
+    const buscarAlertasDoPostgres = async (token) => {
       try {
         setLoading(true);
-        // GET alinhado com o prefixo '/api' do backend modular
-        const response = await api.get("/api/alertas");
+        
+        // 🔐 Injeta o cabeçalho Authorization com o Token JWT do Firebase
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await api.get("/api/alertas", config);
         setAlertas(response.data);
         setErro(null);
       } catch (err) {
@@ -32,7 +41,19 @@ function HistoricoAlertas() {
         setLoading(false);
       }
     };
-    buscarAlertasDoPostgres();
+
+    // 🔄 Aguarda o Firebase sincronizar o estado do usuário antes de disparar a API
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdToken();
+        buscarAlertasDoPostgres(token);
+      } else {
+        setErro("Usuário não autenticado no Firebase.");
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -139,14 +160,18 @@ function RelatoriosBI() {
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
-    const buscarDadosBI = async () => {
+    const buscarDadosBI = async (token) => {
       try {
         setLoading(true);
         
-        // 🔐 Faz a requisição para a nova rota protegida.
-        // O Axios injeta automaticamente o token JWT e o backend identifica a empresa do técnico.
-        const response = await api.get("/api/metricas");
-        
+        // 🔐 Injeta o cabeçalho Authorization com o Token JWT do Firebase
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await api.get("/api/metricas", config);
         setMetricasBI(response.data);
         setErro(null);
       } catch (err) {
@@ -158,10 +183,21 @@ function RelatoriosBI() {
       }
     };
 
-    buscarDadosBI();
+    // 🔄 Sincroniza o ciclo de vida do componente com o estado Auth
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdToken();
+        buscarDadosBI(token);
+      } else {
+        setErro("Usuário não autenticado.");
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // 🔄 Feedback visual enquanto os dados estão sendo processados
+  // Feedback visual enquanto os dados estão sendo processados
   if (loading) {
     return (
       <div className="seguranca-page-container">
@@ -173,7 +209,7 @@ function RelatoriosBI() {
     );
   }
 
-  // ⚠️ Feedback visual caso ocorra alguma falha na rota
+  // Feedback visual caso ocorra alguma falha na rota
   if (erro || !metricasBI) {
     return (
       <div className="seguranca-page-container">
@@ -194,7 +230,6 @@ function RelatoriosBI() {
         </p>
       </div>
 
-      {/* Grid de Cards Populado Dinamicamente */}
       <div className="bi-metrics-summary-grid">
         <div className="bi-summary-card">
           <span className="bi-card-label">Total de Ocorrências</span>
@@ -225,7 +260,6 @@ function RelatoriosBI() {
         </div>
       </div>
 
-      {/* Gráfico de Turnos Dinâmico e Animado */}
       <div className="bi-chart-wrapper-box" style={{ marginTop: "24px" }}>
         <h3 className="chart-section-title">
           Volumetria de Não-Conformidades por Turno
@@ -296,11 +330,18 @@ function GerenciamentoCameras() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const buscarCameras = async () => {
+    const buscarCameras = async (token) => {
       try {
         setLoading(true);
-        // GET atualizado com prefixo '/api'
-        const response = await api.get("/api/cameras");
+        
+        // 🔐 Cabeçalho injetado para rota de listagem de câmeras
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await api.get("/api/cameras", config);
         setCameras(response.data);
       } catch (err) {
         console.error("Erro ao buscar câmeras do banco:", err);
@@ -308,7 +349,17 @@ function GerenciamentoCameras() {
         setLoading(false);
       }
     };
-    buscarCameras();
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdToken();
+        buscarCameras(token);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -323,14 +374,6 @@ function GerenciamentoCameras() {
             PostgreSQL.
           </p>
         </div>
-        <button
-          className="btn-add-dispositivo"
-          onClick={() =>
-            alert("Abrir modal de cadastro para enviar POST /api/cameras")
-          }
-        >
-          + Adicionar Câmera
-        </button>
       </div>
 
       {loading ? (
@@ -406,12 +449,16 @@ function ConfiguracoesIA() {
   });
   const [salvando, setSalvando] = useState(false);
 
-  // Busca as configurações atuais salvas ao carregar a tela
+  // Busca as configurações atuais salvas ao carregar a tela passando token
   useEffect(() => {
-    const buscarConfiguracoesia = async () => {
+    const buscarConfiguracoesia = async (token) => {
       try {
-        // Rota atualizada com prefixo '/api'
-        const response = await api.get("/api/configuracoes-ia");
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+        const response = await api.get("/api/configuracoes-ia", config);
         if (response.data) {
           setConfianca(response.data.confianca_minima);
           setRegras(response.data.regras);
@@ -422,18 +469,40 @@ function ConfiguracoesIA() {
         );
       }
     };
-    buscarConfiguracoesia();
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdToken();
+        buscarConfiguracoesia(token);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleSalvarConfig = async (e) => {
     e.preventDefault();
     try {
       setSalvando(true);
-      // POST atualizado para persistir via camada Repository na rota /api/configuracoes-ia
+
+      // 🔐 Coleta o token mais recente para realizar a gravação do POST com segurança
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Sessão expirada. Faça login novamente.");
+        return;
+      }
+      const token = await user.getIdToken();
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       await api.post("/api/configuracoes-ia", {
         confianca_minima: parseInt(confianca),
         regras: regras,
-      });
+      }, config); // Passa os headers como 3º parâmetro no post do axios
+
       alert(
         `Parâmetros sincronizados com sucesso no PostgreSQL! Threshold fixado em ${confianca}%.`,
       );
