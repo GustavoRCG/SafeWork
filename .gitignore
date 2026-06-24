@@ -34,3 +34,8 @@ __pycache__/
 *.pyc
 
 **/safework-bc1aa-firebase-adminsdk-fbsvc-749b8958de.json
+
+# Evidências e Imagens de Alertas do SafeWork (Dados Sensíveis)
+backend/static/alertas/*.jpg
+backend/static/alertas/*.png
+backend/static/storage/

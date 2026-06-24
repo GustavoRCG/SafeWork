@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class RegrasIA(BaseModel):
     capacete: bool
@@ -18,6 +18,7 @@ class AlertaResponse(BaseModel):
     classe: str
     criticidade: str
     status: str
+    foto_url: Optional[str] = None  # 👈 Evidência visual enviada para o React
 
     class Config:
         from_attributes = True

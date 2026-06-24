@@ -176,6 +176,15 @@ html,
   color: #ffffff;
 }
 
+/* ⚡ Efeito visual interativo nas linhas do histórico de alertas */
+.linha-clicavel-auditoria {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+.linha-clicavel-auditoria:hover {
+  background-color: rgba(30, 41, 59, 0.45) !important;
+}
+
 .td-monospace-code {
   color: #64748b;
   font-family: monospace;
@@ -350,4 +359,97 @@ html,
 .badge-criticidade.moderado {
   background-color: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
+}
+
+/* ==========================================================================
+   ESTILOS ADICIONAIS: MODAL DE EVIDÊNCIA DA IA (YOLOv8)
+   ========================================================================== */
+.modal-overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content-wrapper {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 620px;
+  width: 90%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+}
+
+.modal-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header-flex h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 20px;
+  transition: color 0.15s;
+}
+
+.btn-close-modal:hover {
+  color: #ef4444;
+}
+
+.modal-media-container {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+  background-color: #020617;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-evidence-yolo {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 380px;
+  object-fit: contain;
+}
+
+.modal-details-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  font-size: 13px;
+  color: #94a3b8;
+  border-top: 1px solid #1e293b;
+  padding-top: 14px;
+}
+
+.modal-details-grid strong {
+  color: #64748b;
+}
+
+.modal-details-grid span {
+  display: block;
+  margin-top: 2px;
 }
