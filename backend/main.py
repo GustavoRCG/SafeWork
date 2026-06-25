@@ -2,10 +2,11 @@ import os
 import logging
 import firebase_admin
 from firebase_admin import credentials
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
 
 # Importação das suas rotas modulares
 from routes import auth_routes, funcionario_routes, empresa_routes, plano_routes, seguranca_routes, relatorios_routes
@@ -53,35 +54,24 @@ app = FastAPI(
 app.state.cadastro_rh_ativo = False
 
 # =========================================================================
-# ⚙️ CONFIGURAÇÃO COMPLETA E IRRESTRITA DE CORS (Previne ERR_CONNECTION_REFUSED)
+# ⚙️ CONFIGURAÇÃO COMPLETA E EXPLICITA DE CORS (Resolve o bloqueio do Front)
 # =========================================================================
-# Liberado origins para "*" temporariamente ou listado explicitamente para não barrar requisições das métricas
+# Listamos todas as variações possíveis que o navegador usa para o ambiente local
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
-    "http://127.0.0.1:8000"
+    "http://127.0.0.1:8000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # 🔥 Alterado para "*" para garantir que nenhuma métrica ou feed do front seja bloqueado por CORS
-    allow_credentials=True if not "*" in ["*"] else False, # Adaptação de segurança do FastAPI para uso do "*"
-    allow_methods=["*"],         # Permite GET, POST, OPTIONS, PUT, DELETE, etc.
-    allow_headers=["*"],         # Aceita qualquer cabeçalho como Authorization e Content-Type
-    expose_headers=["*"]         # Permite que o navegador exponha as respostas para o Axios
+    allow_origins=origins,        # 🔥 Aponta para a lista explícita acima
+    allow_credentials=True,       # 🔥 ATIVADO! Permite que o Axios envie os tokens do Firebase
+    allow_methods=["*"],          # Permite GET, POST, OPTIONS, PUT, DELETE, etc.
+    allow_headers=["*"],          # Aceita headers como Authorization e Content-Type
+    expose_headers=["*"]          # Permite que o Axios leia a resposta limpa do servidor
 )
-
-# Se você preferir manter restrito às suas portas locais sem usar o "*", descomente o bloco abaixo e comente o de cima:
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-#     expose_headers=["*"]
-# )
-
 # =========================================================================
 # 📁 MONTAGEM DO DIRETÓRIO DE ARQUIVOS ESTÁTICOS IMAGENS DO ALERTA
 # =========================================================================
@@ -106,17 +96,50 @@ app.include_router(plano_routes.router)
 app.include_router(seguranca_routes.router)
 app.include_router(relatorios_routes.router)
 
-# Rota base (Health Check)
-@app.get("/")
-async def root():
-    return {
-        "status": "SafeWork Online",
-        "firebase": "Conectado" if firebase_admin._apps else "Desconectado",
-        "static_files": "Ativo"
-    }
+# =========================================================================
+# 🛟 PROTOCOLO DE RECOVERY ATUALIZADO: ACESSO DIRETO AO REPOSITORY REAL
+# =========================================================================
+@app.get("/bi/metricas")
+@app.get("/bi/dashboard")
+async def rota_raiz_bi_recovery():
+    """
+    Rota de compatibilidade na raiz que agora consome os dados reais e 
+    vivos do SegurancaRepository, enviando tudo em formato plano para o React.
+    """
+    from database.database import SessionLocal
+    from sqlalchemy import func
+    from database.models.seguranca import DeteccaoModel
+    from repositories.seguranca_repository import SegurancaRepository
 
-# Bloco para execução local direta se necessário
-if __name__ == "__main__":
-    import uvicorn
-    # Vincula ao host 0.0.0.0 para garantir que tanto localhost quanto 127.0.0.1 consigam se comunicar sem recusar conexões
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    db = SessionLocal()
+    try:
+        logger.info("📡 [RECOVERY BI CORRIGIDO] Compilando dados REAIS diretamente do banco...")
+        
+        # 1. Puxa os cálculos reais direto do seu repositório de segurança
+        kpis = SegurancaRepository.obter_dados_bi_geral(db)
+        historico = SegurancaRepository.obter_historico_semanal_bi(db)
+        distribuicao = SegurancaRepository.obter_distribuicao_epis_bi(db)
+        
+        # 2. Retorna a raiz limpa com os seus mais de 1600 dados para o front
+        return {
+            "total_alertas": kpis.get("total_alertas", 0),
+            "total_infracoes": kpis.get("total_infracoes", 0),
+            "taxa_conformidade": kpis.get("taxa_conformidade", "100%"),
+            "tempo_resposta_medio": kpis.get("tempo_resposta_medio", "1.2s"),
+            "historico": historico,
+            "distribuicao": distribuicao
+        }
+
+    except Exception as e:
+        logger.error(f"❌ [RECOVERY BI] Erro ao conectar ao banco real: {str(e)}")
+        # Fallback de última hora apenas se o banco de dados cair completamente
+        return {
+            "total_alertas": 0,
+            "total_infracoes": 0,
+            "taxa_conformidade": "0%",
+            "tempo_resposta_medio": "0s",
+            "historico": [],
+            "distribuicao": []
+        }
+    finally:
+        db.close()

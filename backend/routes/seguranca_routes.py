@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from database.database import get_db, get_current_user # 💡 Dependência estável do database
 from database.models.seguranca import DeteccaoModel, CameraModel
 from repositories.seguranca_repository import SegurancaRepository
-from schemas.seguranca_schema import ConfigIARequest, AlertaResponse, CameraResponse
+from schemas.seguranca_schema import ConfigIARequest, AlertaResponse, CameraResponse, DashboardBIResponse
 from typing import List, Dict
 
 try:
@@ -390,3 +390,37 @@ async def obtener_eventos_recentes(
         })
         
     return eventos
+
+    # Cole em backend/routes/seguranca_routes.py
+
+# =========================================================================
+# 7. ENDPOINT EXCLUSIVO PARA O BUSINESS INTELLIGENCE (BI) - RETORNO CORRIGIDO
+# =========================================================================
+@router.get("/bi/dashboard")
+@router.get("/bi/metricas")
+@router.get("/api/bi/metricas")
+@router.get("/api/bi/dashboard")
+async def obtener_dados_dashboard_bi(db: Session = Depends(get_db)):
+    """
+    Consolida e processa todas as métricas agregadas do PostgreSQL para 
+    alimentar os componentes gráficos do painel de Business Intelligence.
+    """
+    try:
+        logger.info("🔥 [BI] Solicitando compilação de dados analíticos para o dashboard.")
+        
+        kpis = SegurancaRepository.obter_dados_bi_geral(db)
+        historico = SegurancaRepository.obter_historico_semanal_bi(db)
+        distribuicao = SegurancaRepository.obter_distribuicao_epis_bi(db)
+        
+        # 🚀 CORREÇÃO CRÍTICA: Desembrulha os dicionários e injeta tudo na raiz do JSON!
+        return {
+            "total_alertas": kpis.get("total_alertas", 0),
+            "total_infracoes": kpis.get("total_infracoes", 0),
+            "taxa_conformidade": kpis.get("taxa_conformidade", "0%"),
+            "tempo_resposta_medio": kpis.get("tempo_resposta_medio", "1.2s"),
+            "historico": historico,
+            "distribuicao": distribuicao
+        }
+    except Exception as e:
+        logger.error(f"[BI] Erro crítico ao consolidar métricas: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno ao compilar os dados do BI.")

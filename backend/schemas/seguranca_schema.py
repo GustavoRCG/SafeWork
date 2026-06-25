@@ -32,3 +32,28 @@ class CameraResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+        from pydantic import BaseModel
+from typing import List
+
+class KpisBI(BaseModel):
+    indice_conformidade_geral: float
+    tendencia_conformidade: str
+    frente_mais_segura: str
+    frente_critica: str
+    alertas_criticos_frente_critica: int
+
+class HistoricoSemanalBI(BaseModel):
+    dias: List[str]
+    conformidade: List[int]
+    alertas: List[int]
+
+class DistribuicaoEpisBI(BaseModel):
+    labels: List[str]
+    valores: List[int]
+    total: int
+
+class DashboardBIResponse(BaseModel):
+    kpis: KpisBI
+    historico_semanal: HistoricoSemanalBI
+    distribuicao_epis: DistribuicaoEpisBI

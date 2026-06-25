@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import SidebarSeguranca from "./sidebar_seguranca";
 import MonitoramentoAoVivo from "./monitoramento";
-import HistoricoAlertas from "./historico_alertas"; // 👈 IMPORTANTE: Certifique-se de que o arquivo tem esse nome na mesma pasta
-import RelatoriosBI from "./RelatoriosBI";         // 👈 IMPORTANTE: Se o seu arquivo de relatórios estiver separado, importe-o assim
+import HistoricoAlertas from "./historico_alertas"; 
+import RelatoriosBI from "./RelatoriosBI"; // Importação do componente de relatórios
 import api from "../../services/api";
 import { auth } from "../../firebaseConfig";
 import "./dashboard_seguranca.css";
 
 // ==========================================
-// COMPONENTE: GERENCIAMENTO DE CÂMERAS (POSTGRESQL VIA AXIOS)
+// COMPONENTE: GERENCIAMENTO DE CÂMERAS
 // ==========================================
 function GerenciamentoCameras() {
   const [cameras, setCameras] = useState([]);
@@ -18,11 +18,7 @@ function GerenciamentoCameras() {
     const buscarCameras = async (token) => {
       try {
         setLoading(true);
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
+        const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await api.get("/api/cameras", config);
         setCameras(response.data);
       } catch (err) {
@@ -40,7 +36,6 @@ function GerenciamentoCameras() {
         setLoading(false);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -49,16 +44,11 @@ function GerenciamentoCameras() {
       <div className="page-header-flex-row">
         <div className="page-header-block">
           <h2 className="page-title-text">🎥 Gerenciamento de Câmeras Cadastradas</h2>
-          <p className="page-subtitle-text">
-            Status operacional e mapeamento de fluxos integrados vindos do PostgreSQL.
-          </p>
+          <p className="page-subtitle-text">Status operacional vindo do PostgreSQL.</p>
         </div>
       </div>
-
       {loading ? (
-        <div className="api-status-container">
-          <p>Carregando fluxos de vídeo...</p>
-        </div>
+        <div className="api-status-container"><p>A carregar fluxos de vídeo...</p></div>
       ) : (
         <div className="cameras-table-wrapper">
           <table className="cameras-data-table">
@@ -66,18 +56,14 @@ function GerenciamentoCameras() {
               <tr>
                 <th>ID FLUXO</th>
                 <th>IDENTIFICAÇÃO</th>
-                <th>ENDEREÇO DE REDE (IP/RTSP)</th>
-                <th>ZONA DE AUDITORIA</th>
-                <th>STATUS DE CAPTURA</th>
+                <th>IP / RTSP</th>
+                <th>ZONA</th>
+                <th>STATUS</th>
               </tr>
             </thead>
             <tbody>
               {cameras.length === 0 ? (
-                <tr>
-                  <td colSpan="5" style={{ textAlign: "center", color: "#64748b" }}>
-                    Nenhuma câmera registrada.
-                  </td>
-                </tr>
+                <tr><td colSpan="5" style={{ textAlign: "center", color: "#64748b" }}>Nenhuma câmara registada.</td></tr>
               ) : (
                 cameras.map((cam) => (
                   <tr key={cam.id}>
@@ -88,9 +74,7 @@ function GerenciamentoCameras() {
                     <td>
                       <div className="status-indicator-flex">
                         <span className={`status-led-dot ${cam.status === "Online" || cam.status === "ONLINE" ? "led-online" : "led-offline"}`}></span>
-                        <span className={cam.status === "Online" || cam.status === "ONLINE" ? "text-success" : "td-dimmed-text"}>
-                          {cam.status}
-                        </span>
+                        <span className={cam.status === "Online" || cam.status === "ONLINE" ? "text-success" : "td-dimmed-text"}>{cam.status}</span>
                       </div>
                     </td>
                   </tr>
@@ -105,33 +89,24 @@ function GerenciamentoCameras() {
 }
 
 // ==========================================
-// COMPONENTE: CONFIGURAÇÕES DA IA (POST VIA AXIOS)
+// COMPONENTE: CONFIGURAÇÕES DA IA
 // ==========================================
 function ConfiguracoesIA() {
   const [confianca, setConfianca] = useState(65);
-  const [regras, setRegras] = useState({
-    capacete: true,
-    colete: true,
-    luvas: false,
-    zonaRisco: true,
-  });
+  const [regras, setRegras] = useState({ capacete: true, colete: true, luvas: false, zonaRisco: true });
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     const buscarConfiguracoesia = async (token) => {
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
+        const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await api.get("/api/configuracoes-ia", config);
         if (response.data) {
           setConfianca(response.data.confianca_minima);
           setRegras(response.data.regras);
         }
       } catch (err) {
-        console.error("Não foi possível carregar as configurações salvas, usando padrão.");
+        console.error("Não foi possível carregar as configurações da IA.");
       }
     };
 
@@ -141,7 +116,6 @@ function ConfiguracoesIA() {
         buscarConfiguracoesia(token);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -150,26 +124,14 @@ function ConfiguracoesIA() {
     try {
       setSalvando(true);
       const user = auth.currentUser;
-      if (!user) {
-        alert("Sessão expirada. Faça login novamente.");
-        return;
-      }
+      if (!user) return alert("Sessão expirada.");
       const token = await user.getIdToken();
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      await api.post("/api/configuracoes-ia", {
-        confianca_minima: parseInt(confianca),
-        regras: regras,
-      }, config);
-
-      alert(`Parâmetros sincronizados com sucesso no PostgreSQL! Threshold fixado em ${confianca}%.`);
+      await api.post("/api/configuracoes-ia", { confianca_minima: parseInt(confianca), regras }, config);
+      alert("Parâmetros sincronizados com sucesso!");
     } catch (err) {
-      console.error("Erro ao salvar parâmetros da IA:", err);
-      alert("Falha ao salvar parâmetros no servidor.");
+      alert("Falha ao salvar parâmetros.");
     } finally {
       setSalvando(false);
     }
@@ -179,72 +141,18 @@ function ConfiguracoesIA() {
     <div className="seguranca-page-container">
       <div className="page-header-block">
         <h2 className="page-title-text">⚙️ Ajustes de Parâmetros de Inferência</h2>
-        <p className="page-subtitle-text">
-          Configurações dos limiares de acurácia e parâmetros salvos diretamente no PostgreSQL.
-        </p>
       </div>
-
       <div className="ia-settings-card-form">
         <form onSubmit={handleSalvarConfig}>
           <div className="form-group-slider">
-            <div className="slider-labels-flex">
-              <label>Confiança Mínima de Detecção (Confidence Threshold)</label>
-              <span className="slider-badge-value">{confianca}%</span>
-            </div>
-            <input
-              type="range"
-              min="35"
-              max="95"
-              value={confianca}
-              onChange={(e) => setConfianca(e.target.value)}
-              className="custom-range-input"
-            />
-            <p className="form-input-help-text">
-              Filtra inferências do modelo. Valores maiores evitam falsos positivos.
-            </p>
+            <label>Confiança Mínima: {confianca}%</label>
+            <input type="range" min="35" max="95" value={confianca} onChange={(e) => setConfianca(e.target.value)} className="custom-range-input" />
           </div>
-
           <div className="form-group-checkboxes">
-            <h3 className="checkboxes-section-title">EPIs Mapeados no Pipeline Ativo</h3>
-            <div className="checkbox-options-stack">
-              <label className="checkbox-option-item">
-                <input
-                  type="checkbox"
-                  checked={regras.capacete}
-                  onChange={(e) => setRegras({ ...regras, capacete: e.target.checked })}
-                />
-                Auditar Uso de Capacete (Classe 0)
-              </label>
-              <label className="checkbox-option-item">
-                <input
-                  type="checkbox"
-                  checked={regras.colete}
-                  onChange={(e) => setRegras({ ...regras, colete: e.target.checked })}
-                />
-                Auditar Uso de Colete Refletivo (Classe 1)
-              </label>
-              <label className="checkbox-option-item">
-                <input
-                  type="checkbox"
-                  checked={regras.luvas}
-                  onChange={(e) => setRegras({ ...regras, luvas: e.target.checked })}
-                />
-                Detectar Luvas de Proteção Dedicadas
-              </label>
-              <label className="checkbox-option-item">
-                <input
-                  type="checkbox"
-                  checked={regras.zonaRisco}
-                  onChange={(e) => setRegras({ ...regras, zonaRisco: e.target.checked })}
-                />
-                Alertar Invasão de Perímetro (Zonas de Risco)
-              </label>
-            </div>
+            <label><input type="checkbox" checked={regras.capacete} onChange={(e) => setRegras({ ...regras, capacete: e.target.checked })} /> Auditar Capacete</label>
+            <label><input type="checkbox" checked={regras.colete} onChange={(e) => setRegras({ ...regras, colete: e.target.checked })} /> Auditar Colete</label>
           </div>
-
-          <button type="submit" className="btn-submit-settings" disabled={salvando}>
-            {salvando ? "Sincronizando..." : "Aplicar Parâmetros no Pipeline"}
-          </button>
+          <button type="submit" className="btn-submit-settings" disabled={salvando}>{salvando ? "Sincronizando..." : "Aplicar Parâmetros"}</button>
         </form>
       </div>
     </div>
@@ -256,21 +164,35 @@ function ConfiguracoesIA() {
 // ==========================================
 function DashboardSeguranca() {
   const [telaAtiva, setTelaAtiva] = useState("monitoramento");
+  const [dadosBI, setDadosBI] = useState(null);
+
+  useEffect(() => {
+    const carregarMetricas = async () => {
+      try {
+        const response = await api.get("/bi/metricas");
+        if (response.data) {
+          setDadosBI(response.data);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados analíticos na raiz:", err);
+      }
+    };
+    carregarMetricas();
+    // Atualização em tempo real a cada 8 segundos para manter os gráficos vivos
+    const interval = setInterval(carregarMetricas, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
   const renderizarTelaMestra = () => {
     switch (telaAtiva) {
-      case "monitoramento":
-        return <MonitoramentoAoVivo />;
-      case "historico":
-        return <HistoricoAlertas />; // 👈 Vai renderizar o componente dinâmico importado do arquivo isolado
-      case "relatorios":
-        return <RelatoriosBI />;
-      case "cameras":
-        return <GerenciamentoCameras />;
-      case "configuracoes":
-        return <ConfiguracoesIA />;
-      default:
-        return <MonitoramentoAoVivo />;
+      case "monitoramento": return <MonitoramentoAoVivo />;
+      case "historico": return <HistoricoAlertas />; 
+      case "relatorios": 
+        // 🚀 AQUI ESTÁ A CORREÇÃO PRINCIPAL: Injeta o estado dadosBI via props
+        return <RelatoriosBI data={dadosBI} />; 
+      case "cameras": return <GerenciamentoCameras />;
+      case "configuracoes": return <ConfiguracoesIA />;
+      default: return <MonitoramentoAoVivo />;
     }
   };
 
