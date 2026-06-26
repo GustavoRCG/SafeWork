@@ -1,0 +1,159 @@
+/* Container Principal do Formulário/Card */
+.iam-register-card {
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  margin: 20px auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+/* Cabeçalho do Card */
+.iam-register-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.iam-register-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Botão Fechar (✕) para caso use como Modal */
+.iam-register-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.2s ease;
+}
+
+.iam-register-close-btn:hover {
+  color: #94a3b8;
+}
+
+/* Alertas de Feedback (Sucesso / Erro) */
+.iam-feedback-message {
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.iam-feedback-message.sucesso {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid #10b981;
+  color: #10b981;
+}
+
+.iam-feedback-message.erro {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
+
+/* Estrutura do Formulário */
+.iam-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.iam-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iam-form-label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs de Texto e Password */
+.iam-form-input {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.iam-form-input:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}
+
+.iam-form-input::placeholder {
+  color: #4b5563;
+}
+
+/* Select Box do Perfil de Acesso */
+.iam-form-select {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  appearance: none; /* Remove a seta padrão do navegador para customização */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.iam-form-select:focus {
+  border-color: #a855f7;
+}
+
+/* Opções de dentro do Select (Garante fundo escuro em navegadores baseados em Chromium) */
+.iam-form-select option {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+/* Botão de Confirmação Roxo Rígido */
+.iam-submit-btn {
+  background-color: #a855f7;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.iam-submit-btn:hover:not(:disabled) {
+  background-color: #9333ea;
+}
+
+.iam-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.iam-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

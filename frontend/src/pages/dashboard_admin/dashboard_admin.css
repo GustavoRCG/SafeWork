@@ -138,6 +138,26 @@
   font-weight: 600;
 }
 
+.status-offline {
+  font-size: 12px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.cam-status {
+  font-size: 12px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+
+
+
 .btn-admin-action {
   background-color: #a855f7;
   border: none;
@@ -172,4 +192,18 @@
 
 .logs-console p {
   margin: 6px 0;
+}
+
+/* Para criar o espaçamento entre os blocos principais */
+.admin-rows-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Ajuste o valor em pixels conforme achar melhor */
+}
+
+/* Para garantir o alinhamento correto do badge de ativo com os botões */
+.user-status-actions-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
