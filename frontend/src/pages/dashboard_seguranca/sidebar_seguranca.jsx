@@ -67,17 +67,17 @@ function SidebarSeguranca({ telaAtiva, setTelaAtiva }) {
       label: "Relatórios de BI",
       icon: <BarChart3 size={20} />,
     },
-    { id: "cameras", label: "Gerenciar Câmeras", icon: <Camera size={20} /> },
+   /* { id: "cameras", label: "Gerenciar Câmeras", icon: <Camera size={20} /> },
     {
       id: "configuracoes",
       label: "Configurações da IA",
       icon: <Sliders size={20} />,
-    },
+    },*/
   ];
 
   return (
     <aside className="safework-sidebar">
-      {/* 🖼️ Bloco da Brand Atualizado com a Logo Oficial em Imagem */}
+      {/*Bloco da Brand Atualizado com a Logo Oficial em Imagem */}
       <div
         className="sidebar-brand"
         style={{
@@ -100,7 +100,7 @@ function SidebarSeguranca({ telaAtiva, setTelaAtiva }) {
 
       <div className="model-status-badge">
         <span className="pulse-dot"></span>
-        <span className="model-txt">MODELO ATIVO (YOLOv8)</span>
+        <span className="model-txt">MODELO ATIVO</span>
       </div>
 
       <nav className="sidebar-navigation">
@@ -119,7 +119,7 @@ function SidebarSeguranca({ telaAtiva, setTelaAtiva }) {
         </ul>
       </nav>
 
-      {/* 👤 Rodapé Dinâmico com dados vindos do Firebase Auth */}
+      {/* Rodapé Dinâmico com dados vindos do Firebase Auth */}
       <div className="sidebar-footer-user">
         <div className="user-profile-wrapper">
           {usuario.avatar ? (

@@ -24,21 +24,39 @@ function CadastroFuncionario() {
 
   // Estados do Face ID (Webcam centralizada no Backend)
   const [cameraAtiva, setCameraAtiva] = useState(false);
-  const [fotoCapturada, setFotoCapturada] = useState(null); // Guarda a imagem em String Base64 vinda do Python
+  const [fotoCapturada, setFotoCapturada] = useState(null); 
   const [carregando, setCarregando] = useState(false);
 
-  // 📷 Inicializa a visualização do fluxo que o Python está capturando
+  // 🎭 FUNÇÃO DE MÁSCARA DE CPF CORRIGIDA (TRAVA DE SEGURANÇA INTEGRADA)
+  const handleCpfChange = (e) => {
+    // 1. Remove imediatamente qualquer caractere que não seja número
+    let valorRaw = e.target.value.replace(/\D/g, "");
+
+    // 2. Trava física no React: impede que a string limpa passe de 11 dígitos
+    if (valorRaw.length > 11) {
+      valorRaw = valorRaw.slice(0, 11);
+    }
+
+    // 3. Aplica a formatação baseada em blocos de substituição progressiva
+    const valorComMascara = valorRaw
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+
+    // 4. Atualiza o estado controlado do componente
+    setCpf(valorComMascara);
+  };
+
+  // 📷 Inicializa a visualização do fluxo da câmera
   const ligarCamera = () => {
     setFotoCapturada(null);
     setCameraAtiva(true);
   };
 
-  // ✂️ Solicita ao Backend que capture o frame atual da câmera dele
+  // ✂️ Captura o frame do backend
   const capturarFotoPeloBackend = async () => {
     try {
       setCarregando(true);
-
-      // Rota no seu FastAPI que lê o frame atual do cv2.VideoCapture e retorna em Base64
       const response = await api.get("/api/monitoramento/capturar-frame");
 
       if (response.data && response.data.imagem_base64) {
@@ -49,9 +67,7 @@ function CadastroFuncionario() {
       }
     } catch (err) {
       console.error("Erro ao solicitar captura de frame ao backend: ", err);
-      alert(
-        "Não foi possível capturar a imagem do servidor de IA. Verifique se o backend está rodando.",
-      );
+      alert("Não foi possível capturar a imagem do servidor de IA. Verifique se o backend está rodando.");
     } finally {
       setCarregando(false);
     }
@@ -62,14 +78,18 @@ function CadastroFuncionario() {
     setCameraAtiva(true);
   };
 
-  // 🟢 Enviar Payload Completo ao FastAPI
+  // Enviar Payload ao Backend
   const handleCadastro = async (e) => {
     e.preventDefault();
 
     if (!fotoCapturada) {
-      alert(
-        "Aviso: A captura da biometria facial (Face ID) é obrigatória para o treinamento da IA.",
-      );
+      alert("Aviso: A captura da biometria facial (Face ID) é obrigatória para o treinamento da IA.");
+      return;
+    }
+
+    const cpfLimpo = cpf.replace(/\D/g, "");
+    if (cpfLimpo.length !== 11) {
+      alert("Por favor, digite um CPF válido com 11 dígitos.");
       return;
     }
 
@@ -82,19 +102,15 @@ function CadastroFuncionario() {
       }
 
       const token = await usuarioAtual.getIdToken();
-      const cpfLimpo = cpf.replace(/\D/g, "");
       const dataHoje = new Date().toISOString().split("T")[0];
 
-      // CORREÇÃO TÉCNICA AQUI:
-      // O payload agora contém APENAS os campos exatos mapeados no banco da Emilly!
-      // (setor e epi_obrigatorio foram removidos do envio para não quebrar a aplicação)
       const novoColaborador = {
         id_empresa: 1,
         nome: nome.trim(),
         cpf: cpfLimpo,
         cargo: cargo.trim(),
         data_admissao: dataHoje,
-        face_id_image: fotoCapturada, // String Base64 enviada para tratamento no backend
+        face_id_image: fotoCapturada,
       };
 
       await api.post("/funcionarios/", novoColaborador, {
@@ -105,21 +121,7 @@ function CadastroFuncionario() {
       navigate("/dashboard-rh");
     } catch (erro) {
       console.error("Erro detalhado ao enviar dados para a API:", erro);
-
-      if (erro.response && erro.response.data && erro.response.data.detail) {
-        const detalheDoErro = erro.response.data.detail;
-
-        if (Array.isArray(detalheDoErro)) {
-          const listaDeErros = detalheDoErro
-            .map((err) => `• Campo [${err.loc[1]}]: ${err.msg}`)
-            .join("\n");
-          alert(`Erro de validação de dados no Backend:\n\n${listaDeErros}`);
-        } else {
-          alert(`Restrição do Servidor: ${detalheDoErro}`);
-        }
-      } else {
-        alert("Falha operacional ao persistir dados no banco relacional.");
-      }
+      alert("Falha operacional ao persistir dados no banco relacional.");
     } finally {
       setCarregando(false);
     }
@@ -129,10 +131,7 @@ function CadastroFuncionario() {
     <div className="cadastro-screen-container">
       {/* Barra Superior */}
       <header className="cadastro-header">
-        <button
-          onClick={() => navigate("/dashboard-rh")}
-          className="btn-back-rh"
-        >
+        <button onClick={() => navigate("/dashboard-rh")} className="btn-back-rh">
           <ArrowLeft size={18} /> Voltar ao Painel
         </button>
         <div className="cadastro-header-title">
@@ -146,100 +145,76 @@ function CadastroFuncionario() {
         {/* Formulário de dados textuais */}
         <div className="cadastro-form-card">
           <div className="card-intro">
-            <h2>Dados Operacionais</h2>
-            <p>
-              Insira as informações do contrato e associe as regras de EPI da
-              NR-6.
-            </p>
+            <h2>Dados do Contrato</h2>
+            <p>Associe o novo funcionário às matrizes de proteção da NR-6.</p>
           </div>
 
           <form onSubmit={handleCadastro} className="form-inputs-stack">
             <div className="input-field">
-              <label>Nome Completo</label>
               <input
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                placeholder="Ex: Wagner Silva"
+                placeholder="Nome Completo"
                 required
               />
             </div>
 
             <div className="input-field">
-              <label>CPF (Apenas números)</label>
               <input
-                type="text"
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                type="text"              
+                value={cpf}                
+                onChange={handleCpfChange} 
                 placeholder="000.000.000-00"
+                maxLength={14}            
                 required
               />
             </div>
 
             <div className="input-field">
-              <label>Cargo / Função Contratual</label>
               <input
                 type="text"
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
-                placeholder="Ex: Operador de Empilhadeira"
+                placeholder="Cargo / Função"
                 required
               />
             </div>
 
             <div className="input-field">
-              <label>Setor / Área de Locação</label>
               <input
                 type="text"
                 value={setor}
                 onChange={(e) => setSetor(e.target.value)}
-                placeholder="Ex: Galpão de Carga e Logística"
+                placeholder="Setor Alocado"
                 required
               />
             </div>
 
             <div className="input-field">
-              <label>Matriz de Proteção Individual Requerida</label>
               <select
                 value={epiObrigatorio}
                 onChange={(e) => setEpiObrigatorio(e.target.value)}
               >
-                <option value="Capacete, Colete">
-                  Capacete + Colete Refletivo
-                </option>
-                <option value="Capacete, Óculos, Luvas">
-                  Capacete + Óculos + Luvas
-                </option>
-                <option value="Apenas Capacete">
-                  Apenas Capacete Operacional
-                </option>
-                <option value="Capacete, Protetor Auricular">
-                  Capacete + Protetor Auricular
-                </option>
+                <option value="Capacete, Colete">Capacete + Colete Refletivo</option>
+                <option value="Capacete, Óculos, Luvas">Capacete + Óculos + Luvas</option>
+                <option value="Apenas Capacete">Apenas Capacete Operacional</option>
+                <option value="Capacete, Protetor Auricular">Capacete + Protetor Auricular</option>
               </select>
             </div>
 
-            <button
-              type="submit"
-              disabled={carregando}
-              className="btn-finish-cadastro"
-            >
-              <UserPlus size={18} />{" "}
-              {carregando
-                ? "Persistindo..."
-                : "Finalizar e Indexar Funcionário"}
+            <button type="submit" disabled={carregando} className="btn-finish-cadastro">
+              <UserPlus size={18} /> 
+              {carregando ? "Persistindo..." : "Salvar Funcionário na Base"}
             </button>
           </form>
         </div>
 
-        {/* Lado Direito: Captura de Face ID via Feed do Backend */}
+        {/* Lado Direito: Captura de Face ID */}
         <div className="cadastro-camera-card">
           <div className="card-intro">
             <h2>Biometria Facial (Face ID)</h2>
-            <p>
-              Obrigatório para que a rede neural correlacione e valide as
-              infrações em tempo real.
-            </p>
+            <p>Imprescindível para correlacionar o rosto do colaborador com o CPF durante as detecções do modelo.</p>
           </div>
 
           <div className="viewport-camera-box">
@@ -251,17 +226,15 @@ function CadastroFuncionario() {
                 </div>
               </div>
             ) : cameraAtiva ? (
-              /* O React apenas consome a rota de streaming de vídeo do seu FastAPI */
               <img
                 src="http://localhost:8000/api/video-stream"
                 alt="Transmissão de Vídeo da IA"
                 className="live-webcam-element"
-                style={{ width: "440px", height: "330px", objectFit: "cover" }}
               />
             ) : (
               <div className="camera-idle-placeholder">
-                <Camera size={48} color="#94a3b8" />
-                <p>Fluxo de vídeo inativo</p>
+                <Camera size={48} color="#4b5563" />
+                <p>Câmera em modo de espera</p>
               </div>
             )}
           </div>
@@ -274,8 +247,7 @@ function CadastroFuncionario() {
                 disabled={carregando}
                 className="btn-trigger-snap"
               >
-                <Camera size={18} />{" "}
-                {carregando ? "Capturando..." : "Capturar Face ID"}
+                <Camera size={18} /> {carregando ? "Capturando..." : "Capturar Face ID"}
               </button>
             ) : (
               <button
@@ -289,7 +261,7 @@ function CadastroFuncionario() {
                   </>
                 ) : (
                   <>
-                    <Camera size={18} /> Iniciar Dispositivo de Vídeo
+                    <Camera size={18} /> Ativar Captura de Vídeo
                   </>
                 )}
               </button>

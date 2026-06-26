@@ -9,6 +9,7 @@ from database.database import SessionLocal
 from sqlalchemy.orm import Session
 
 from database.recognition import ReconhecedorFacial
+from utils.logger import gravar_log_seguranca_com_lock
 
 # 📂 CAMINHOS DO MODELO E CONFIGURAÇÕES
 MODEL_PATH = r"C:\users\gusta\onedrive\documentos\safework_tcc-main\safework_tcc-main\runs\detect\safework_treino_atualizado\weights\best.pt"
@@ -74,6 +75,11 @@ def salvar_deteccao_db(dados):
         db.commit()
         db.refresh(nova_deteccao)
         print(f"[SafeWork Banco] Infração '{tipo_final}' salva com sucesso às {horario_local.strftime('%H:%M:%S')}!")
+        #bloco de lock
+        gravar_log_seguranca_com_lock(
+            id_camera=str(dados.get('id_camera', 1)), 
+            tipo_infracao=tipo_final
+        )
         return nova_deteccao
         
     except Exception as e:

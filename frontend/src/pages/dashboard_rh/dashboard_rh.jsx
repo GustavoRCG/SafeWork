@@ -50,6 +50,26 @@ function DashboardRH() {
   // 💡 Define dinamicamente a URL base do backend para o streaming de vídeo
   const baseURL = api.defaults.baseURL || "http://localhost:8000";
 
+  // 🎭 FUNÇÃO DE MÁSCARA DE CPF CORRIGIDA (EM TEMPO REAL)
+  const handleCpfChange = (e) => {
+    // Remove imediatamente qualquer caractere que não seja número
+    let valorRaw = e.target.value.replace(/\D/g, "");
+
+    // Trava física no React: impede que a string limpa passe de 11 dígitos
+    if (valorRaw.length > 11) {
+      valorRaw = valorRaw.slice(0, 11);
+    }
+
+    // Aplica a formatação baseada em blocos de substituição progressiva
+    const valorComMascara = valorRaw
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+
+    // Atualiza o estado controlado do componente
+    setCpf(valorComMascara);
+  };
+
   // 🔐 Carrega dados iniciais do Dashboard do RH (Blindado contra erros 403/404)
   const carregarDadosPainel = async () => {
     try {
@@ -317,7 +337,7 @@ function DashboardRH() {
             </div>
           </div>
 
-          {/* Seção 1: LISTAGEM DE COLABORADORES DO BANCO (Adicionado para resolver seu problema) */}
+          {/* Seção 1: LISTAGEM DE COLABORADORES DO BANCO */}
           <div className="table-card" style={{ marginBottom: "25px" }}>
             <div className="table-header">
               <h3>Colaboradores Ativos na Empresa</h3>
@@ -428,8 +448,9 @@ function DashboardRH() {
               <input
                 type="text"
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
-                placeholder="CPF (Apenas números)"
+                onChange={handleCpfChange}
+                placeholder="000.000.000-00"
+                maxLength={14}
                 required
                 className="input-field-rh"
               />
